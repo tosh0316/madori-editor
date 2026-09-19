@@ -52,6 +52,10 @@
   #three .x3{ position:fixed; top:10px; right:14px; z-index:9; font-size:22px; color:#111; background:#fff9; border-radius:18px; width:38px; height:38px; text-align:center; line-height:38px; }
   #three .u3{ position:fixed; top:12px; left:14px; z-index:9; background:var(--accent); color:#fff; border:none; padding:9px 14px; border-radius:8px; font-size:13px; }
   #three .tag{ position:fixed; bottom:14px; left:0; right:0; text-align:center; color:#333; font-size:12px; }
+  #three .modes{ position:fixed; top:12px; left:50%; transform:translateX(-50%); z-index:9; display:flex; gap:4px; }
+  #three .modes button{ background:#3a3a3acc; color:#eee; border:none; padding:8px 12px; border-radius:8px; font-size:13px; }
+  #three .modes button.on{ background:var(--accent); color:#fff; }
+  .dlab{ position:fixed; z-index:9; font-size:11px; color:#123; background:#fffb; padding:1px 5px; border-radius:4px; transform:translateY(-50%); white-space:nowrap; pointer-events:none; display:none; }
 </style>
 </head>
 <body>
@@ -87,6 +91,7 @@
 <div id="three">
   <div class="x3" id="c3d">×</div>
   <button class="u3" id="u3d">↻ 更新</button>
+  <div class="modes" id="modes"><button data-m="3d" class="on">3D</button><button data-m="elevX">X立面</button><button data-m="elevY">Y立面</button></div>
   <div class="tag">ドラッグ=回転 / ピンチ=ズーム / 2本指=移動</div>
 </div>
 
@@ -394,28 +399,46 @@ resize(); fit(); draw();
 <script type="module">
 import * as THREE from 'three';
 import {OrbitControls} from 'https://unpkg.com/three@0.160.0/examples/jsm/controls/OrbitControls.js';
-const host=document.getElementById('three'); let renderer,scene,camera,controls,root,inited=false;
-function onResize(){ if(!renderer)return; renderer.setSize(innerWidth,innerHeight); camera.aspect=innerWidth/innerHeight; camera.updateProjectionMatrix(); }
+const host=document.getElementById('three');
+let renderer,scene,camP,camO,camera,controls,root,datumGrp,inited=false,mode='3d',lastH=null;
+let labelEls=[],labelPos=[];
+function onResize(){ if(!renderer)return; renderer.setSize(innerWidth,innerHeight);
+  if(camP){camP.aspect=innerWidth/innerHeight;camP.updateProjectionMatrix();} if(mode!=='3d')applyOrtho(); }
 addEventListener('resize',onResize);
+function setCam(c){ camera=c; if(controls)controls.dispose(); controls=new OrbitControls(camera,renderer.domElement); controls.enableDamping=true; }
 function init(){ renderer=new THREE.WebGLRenderer({antialias:true}); renderer.setPixelRatio(devicePixelRatio); renderer.setSize(innerWidth,innerHeight); host.appendChild(renderer.domElement);
-  scene=new THREE.Scene(); scene.background=new THREE.Color(0xaeb4ba); camera=new THREE.PerspectiveCamera(45,innerWidth/innerHeight,50,600000);
-  controls=new OrbitControls(camera,renderer.domElement); controls.enableDamping=true;
-  scene.add(new THREE.HemisphereLight(0xffffff,0x555560,1.1)); const dl=new THREE.DirectionalLight(0xffffff,1.1); dl.position.set(-1,2,1.3); scene.add(dl);
-  root=new THREE.Group(); scene.add(root); inited=true; animate(); }
-function animate(){ if(!host.classList.contains('on'))return; requestAnimationFrame(animate); controls.update(); renderer.render(scene,camera); }
-function POS(g,axis){ return axis==='x'?(g.x_positions||null):(g.y_positions||null); }
-function rp(t,g){ if(typeof t[0]==='string'){ const xi=parseFloat(t[0].slice(1))-1, yj=parseFloat(t[1].slice(1))-1;
-    const xp=g.x_positions,yp=g.y_positions; const p=g.pitch||910;
-    return [ xp?xp[Math.round(xi)]:xi*p, yp?yp[Math.round(yj)]:yj*p ]; } return [t[0],t[1]]; }
+  scene=new THREE.Scene(); scene.background=new THREE.Color(0xaeb4ba);
+  camP=new THREE.PerspectiveCamera(45,innerWidth/innerHeight,50,900000);
+  camO=new THREE.OrthographicCamera(-1,1,1,-1,-200000,900000);
+  setCam(camP);
+  scene.add(new THREE.HemisphereLight(0xffffff,0x555560,1.15)); const dl=new THREE.DirectionalLight(0xffffff,1.0); dl.position.set(-1,2,1.3); scene.add(dl);
+  root=new THREE.Group(); scene.add(root); datumGrp=new THREE.Group(); scene.add(datumGrp); inited=true; animate(); }
+function animate(){ if(!host.classList.contains('on'))return; requestAnimationFrame(animate); controls.update(); renderer.render(scene,camera); if(mode!=='3d')updateLabels(); }
+function axPos(arr,idx,p){ if(arr&&arr.length){ const lo=Math.max(0,Math.min(arr.length-1,Math.floor(idx))),hi=Math.max(0,Math.min(arr.length-1,Math.ceil(idx))); if(lo===hi)return arr[lo]; const f=idx-Math.floor(idx); return arr[lo]*(1-f)+arr[hi]*f; } return idx*(p||910); }
+function rp(t,g){ if(typeof t[0]==='string'){ const xi=parseFloat(t[0].slice(1))-1,yj=parseFloat(t[1].slice(1))-1; return [axPos(g.x_positions,xi,g.pitch),axPos(g.y_positions,yj,g.pitch)]; } return [t[0],t[1]]; }
+function roofZAt(h,x,y){ let best=null; if(h.roof&&h.roof.outlines){ for(const o of h.roof.outlines){ if(o.type!=='gable'||!o.ridge)continue;
+  const pts=o.boundary.map(p=>rp(p,h.grid)); const xs=pts.map(p=>p[0]),ys=pts.map(p=>p[1]); const ov=o.overhang||0;
+  const x0=Math.min(...xs)-ov,x1=Math.max(...xs)+ov,y0=Math.min(...ys)-ov,y1=Math.max(...ys)+ov;
+  if(x<x0-2||x>x1+2||y<y0-2||y>y1+2)continue;
+  const ri=parseFloat(o.ridge.axis.slice(1))-1; const rx=axPos(h.grid.x_positions,ri,h.grid.pitch); const t=Math.tan((o.pitch_deg||20)*Math.PI/180);
+  const z=x<=rx?o.ridge.z-t*(rx-x):o.ridge.z-t*(x-rx); best=best===null?z:Math.min(best,z); } } return best; }
+function wallMesh(a,b,z0,z1,th,color,isTop,h){ const dx=b[0]-a[0],dy=b[1]-a[1]; const len=Math.hypot(dx,dy); if(len<1)return null; const ux=dx/len,uy=dy/len;
+  const topAt=s=>{ const x=a[0]+ux*s,y=a[1]+uy*s; const rz=roofZAt(h,x,y); let tv; if(rz==null)tv=z1; else if(isTop)tv=rz; else tv=Math.min(z1,rz); return Math.max(z0+20,tv); };
+  const N=Math.max(4,Math.min(80,Math.ceil(len/300))); const sh=new THREE.Shape(); sh.moveTo(0,z0); sh.lineTo(len,z0);
+  for(let k=N;k>=0;k--){ const s=len*k/N; sh.lineTo(s,topAt(s)); }
+  const geo=new THREE.ExtrudeGeometry(sh,{depth:th,bevelEnabled:false});
+  const dir3=new THREE.Vector3(ux,0,-uy),up3=new THREE.Vector3(0,1,0); const perp3=new THREE.Vector3().crossVectors(dir3,up3).normalize();
+  const m=new THREE.Matrix4().makeBasis(dir3,up3,perp3); m.setPosition(a[0]-perp3.x*th/2,-perp3.y*th/2,-a[1]-perp3.z*th/2);
+  geo.applyMatrix4(m); geo.computeVertexNormals(); return new THREE.Mesh(geo,new THREE.MeshLambertMaterial({color})); }
 function clearRoot(){ scene.remove(root); root.traverse(o=>{if(o.geometry)o.geometry.dispose(); if(o.material)o.material.dispose();}); root=new THREE.Group(); scene.add(root); }
 function panel(xa,za,xb,zb,y0,y1){ const gg=new THREE.BufferGeometry(); gg.setAttribute('position',new THREE.Float32BufferAttribute([xa,za,-y0,xb,zb,-y0,xb,zb,-y1,xa,za,-y1],3)); gg.setIndex([0,1,2,0,2,3]); gg.computeVertexNormals(); return new THREE.Mesh(gg,new THREE.MeshLambertMaterial({color:0x9a9a9f,side:THREE.DoubleSide})); }
 function zOf(h,name,off){ const d=h.datums||{}; return (d[name]!=null?d[name]:0)+(off||0); }
 function build(){ if(!inited)return; clearRoot(); const h=window.getHouse(); const g=h.grid; const lv={}; (h.levels||[]).forEach(l=>lv[l.id]=l);
-  for(const w of (h.walls||[])){ const a=rp(w.from,g),b=rp(w.to,g); const dx=b[0]-a[0],dy=b[1]-a[1]; const len=Math.hypot(dx,dy); if(len<1)continue;
+  const topLevel=(h.levels||[]).slice().sort((p,q)=>p.fl-q.fl).map(l=>l.id).pop()||'2F';
+  for(const w of (h.walls||[])){ const a=rp(w.from,g),b=rp(w.to,g);
     let z0,z1; if(w.base&&h.datums){ z0=zOf(h,w.base,w.h0); z1=zOf(h,w.top,w.h1); } else { const L=lv[w.level]||{fl:0,cl:2500}; z0=L.fl; z1=L.cl; }
-    const H=Math.max(50,z1-z0), th=w.thickness||(w.kind==='outer'?150:105);
-    const m=new THREE.Mesh(new THREE.BoxGeometry(len,H,th),new THREE.MeshLambertMaterial({color:w.kind==='outer'?0xe2e2e0:0xc2c7cc}));
-    m.position.set((a[0]+b[0])/2, z0+H/2, -(a[1]+b[1])/2); m.rotation.y=-Math.atan2(dy,dx); root.add(m); }
+    const th=w.thickness||(w.kind==='outer'?150:105); const isTop=w.level===topLevel;
+    const m=wallMesh(a,b,z0,z1,th,w.kind==='outer'?0xe2e2e0:0xc2c7cc,isTop,h); if(m)root.add(m); }
   for(const f of (h.floors||[])){ const L=lv[f.level]||{fl:0}; const sh=new THREE.Shape(); (f.boundary||[]).forEach((p,i)=>{const q=rp(p,g); i?sh.lineTo(q[0],q[1]):sh.moveTo(q[0],q[1]);});
     const m=new THREE.Mesh(new THREE.ShapeGeometry(sh),new THREE.MeshLambertMaterial({color:0xd6cfc2,side:THREE.DoubleSide})); m.rotation.x=-Math.PI/2; m.position.y=(L.fl||0)+2; root.add(m); }
   for(const o of (h.openings||[])){ const w=(h.walls||[]).find(x=>x.id===o.host); if(!w)continue; const a=rp(w.from,g),b=rp(w.to,g); const ang=Math.atan2(b[1]-a[1],b[0]-a[0]); const at=rp(o.at,g);
@@ -426,11 +449,34 @@ function build(){ if(!inited)return; clearRoot(); const h=window.getHouse(); con
     const xs=pts.map(p=>p[0]),ys=pts.map(p=>p[1]); const ov=o.overhang||0; const x0=Math.min(...xs)-ov,x1=Math.max(...xs)+ov,y0=Math.min(...ys)-ov,y1=Math.max(...ys)+ov;
     const xp=g.x_positions,p=g.pitch||910; const ri=parseFloat(o.ridge.axis.slice(1))-1; const rx=xp?xp[Math.round(ri)]:ri*p; const rz=o.ridge.z; const t=Math.tan((o.pitch_deg||20)*Math.PI/180);
     root.add(panel(x0,rz-t*(rx-x0),rx,rz,y0,y1)); root.add(panel(rx,rz,x1,rz-t*(x1-rx),y0,y1)); } }
-  const box=new THREE.Box3().setFromObject(root); if(box.isEmpty())return; const c=box.getCenter(new THREE.Vector3()),s=box.getSize(new THREE.Vector3()); const r=Math.max(s.x,s.y,s.z,3000);
-  camera.position.set(c.x-r*1.1,c.y+r*0.85,c.z+r*1.25); camera.near=r/100; camera.far=r*20; camera.updateProjectionMatrix(); controls.target.copy(c); controls.update(); }
+  lastH=h; setMode(mode); }
+function bbox(){ return new THREE.Box3().setFromObject(root); }
+function frame3D(){ const box=bbox(); if(box.isEmpty())return; const c=box.getCenter(new THREE.Vector3()),s=box.getSize(new THREE.Vector3()); const r=Math.max(s.x,s.y,s.z,3000);
+  camP.position.set(c.x-r*1.1,c.y+r*0.85,c.z+r*1.25); camP.near=r/100; camP.far=r*20; camP.updateProjectionMatrix(); controls.target.copy(c); controls.update(); }
+function applyOrtho(){ const box=bbox(); if(box.isEmpty())return; const c=box.getCenter(new THREE.Vector3()),s=box.getSize(new THREE.Vector3()); const asp=innerWidth/innerHeight;
+  let hW=(mode==='elevX'?s.x:s.z), vH=s.y; hW=Math.max(hW,1000); vH=Math.max(vH,1000); let halfW=hW*0.62,halfH=vH*0.62; if(halfW/halfH<asp)halfW=halfH*asp; else halfH=halfW/asp;
+  camO.left=-halfW;camO.right=halfW;camO.top=halfH;camO.bottom=-halfH; const dist=Math.max(s.x,s.y,s.z)*3+20000;
+  if(mode==='elevX')camO.position.set(c.x,c.y,c.z+dist); else camO.position.set(c.x+dist,c.y,c.z);
+  camO.near=1;camO.far=dist*3;camO.up.set(0,1,0);camO.updateProjectionMatrix(); controls.target.copy(c);controls.update(); }
+function rebuildDatums(){ datumGrp.clear(); labelEls.forEach(e=>e.remove()); labelEls=[]; labelPos=[];
+  if(mode==='3d'||!lastH||!lastH.datums)return; const box=bbox(); if(box.isEmpty())return; const mn=box.min,mx=box.max;
+  const mgx=(mx.x-mn.x)*0.08+400, mgz=(mx.z-mn.z)*0.08+400;
+  for(const [nm,z] of Object.entries(lastH.datums).sort((a,b)=>a[1]-b[1])){ let pts,lp;
+    if(mode==='elevX'){ pts=[new THREE.Vector3(mn.x-mgx,z,mx.z),new THREE.Vector3(mx.x+mgx,z,mx.z)]; lp=new THREE.Vector3(mx.x+mgx,z,mx.z); }
+    else { pts=[new THREE.Vector3(mn.x,z,mn.z-mgz),new THREE.Vector3(mn.x,z,mx.z+mgz)]; lp=new THREE.Vector3(mn.x,z,mx.z+mgz); }
+    const ln=new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts),new THREE.LineBasicMaterial({color:0x33506e})); datumGrp.add(ln);
+    const el=document.createElement('div'); el.className='dlab'; el.textContent=nm+' '+Math.round(z); host.appendChild(el); labelEls.push(el); labelPos.push(lp); } }
+function updateLabels(){ for(let i=0;i<labelEls.length;i++){ const v=labelPos[i].clone().project(camera);
+    if(v.z<-1||v.z>1){ labelEls[i].style.display='none'; continue; }
+    labelEls[i].style.display='block'; labelEls[i].style.left=((v.x*0.5+0.5)*innerWidth)+'px'; labelEls[i].style.top=((-v.y*0.5+0.5)*innerHeight)+'px'; } }
+function setMode(m){ mode=m; document.querySelectorAll('#modes button').forEach(b=>b.classList.toggle('on',b.dataset.m===m));
+  if(m==='3d'){ setCam(camP); controls.enableRotate=true; datumGrp.visible=false; frame3D(); }
+  else { setCam(camO); controls.enableRotate=false; datumGrp.visible=true; applyOrtho(); }
+  rebuildDatums(); }
 document.getElementById('btn3d').onclick=()=>{ host.classList.add('on'); if(!inited)init(); onResize(); build(); animate(); };
-document.getElementById('c3d').onclick=()=>{ host.classList.remove('on'); };
+document.getElementById('c3d').onclick=()=>{ host.classList.remove('on'); labelEls.forEach(e=>e.style.display='none'); };
 document.getElementById('u3d').onclick=()=>build();
+document.querySelectorAll('#modes button').forEach(b=>b.onclick=()=>setMode(b.dataset.m));
 </script>
 </body>
 </html>
