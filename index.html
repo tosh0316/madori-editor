@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>間取りエディタ — 木造在来ハウスジェネレータ</title>
+<style>
+  :root{ --bg:#8f979e; --ink:#1a1a1a; --panel:#f5f4f1; --accent:#2f6db0; --gray:#bebebe; }
+  *{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html,body{ margin:0; height:100%; overflow:hidden; font-family:-apple-system,"Hiragino Kaku Gothic ProN",sans-serif; color:var(--ink); }
+  #cv{ position:fixed; inset:0; touch-action:none; background:var(--bg); display:block; }
+  #top{ position:fixed; top:0; left:0; right:0; padding:6px 10px; font-size:12px; color:#fff;
+        background:rgba(0,0,0,.45); display:flex; gap:10px; align-items:center; z-index:5; }
+  #top b{ font-weight:600; }
+  .lv{ padding:3px 9px; border-radius:12px; background:#fff3; cursor:pointer; }
+  .lv.on{ background:var(--accent); }
+  #bar{ position:fixed; bottom:0; left:0; right:0; z-index:5; display:flex; flex-wrap:wrap;
+        gap:6px; padding:8px; background:rgba(20,20,20,.82); }
+  .btn{ flex:1 1 auto; min-width:60px; text-align:center; padding:11px 6px; border-radius:8px;
+        background:#3a3a3a; color:#eee; font-size:13px; border:none; }
+  .btn.on{ background:var(--accent); color:#fff; }
+  .btn.act{ background:#5a5a5a; }
+  #panel{ position:fixed; top:0; right:0; bottom:0; width:min(86vw,360px); background:var(--panel);
+          z-index:10; transform:translateX(100%); transition:.2s; padding:14px; overflow:auto; }
+  #panel.open{ transform:none; box-shadow:-4px 0 20px #0005; }
+  #panel h3{ margin:12px 0 6px; font-size:14px; }
+  #panel label{ display:flex; justify-content:space-between; align-items:center; font-size:13px; margin:5px 0; gap:8px;}
+  #panel input,#panel select{ width:120px; padding:5px; font-size:13px; }
+  #panel textarea{ width:100%; height:180px; font-size:11px; font-family:monospace; }
+  .row{ display:flex; gap:6px; }
+  .row .btn{ background:#ddd; color:#222; }
+  .x{ position:absolute; top:8px; right:12px; font-size:22px; }
+  .hint{ font-size:11px; color:#555; margin:4px 0 10px; }
+</style>
+</head>
+<body>
+<canvas id="cv"></canvas>
+<div id="top">
+  <b>間取りエディタ</b>
+  <span class="lv on" data-lv="1F">1F</span>
+  <span class="lv" data-lv="2F">2F</span>
+  <span id="stat"></span>
+</div>
+<div id="bar">
+  <button class="btn on" data-tool="wall_outer">外壁</button>
+  <button class="btn" data-tool="wall_inner">内壁</button>
+  <button class="btn" data-tool="opening">開口</button>
+  <button class="btn" data-tool="floor">床</button>
+  <button class="btn" data-tool="erase">消去</button>
+  <button class="btn act" id="undo">戻す</button>
+  <button class="btn act" id="menu">≡</button>
+</div>
+
+<div id="panel">
+  <div class="x" id="close">×</div>
+  <h3>グリッド</h3>
+  <label>ピッチ(mm)<input id="g_pitch" type="number" value="910"></label>
+  <label>X通り数<input id="g_x" type="number" value="14"></label>
+  <label>Y通り数<input id="g_y" type="number" value="11"></label>
+  <label>半グリッド吸着<input id="g_half" type="checkbox"></label>
+  <div class="hint">基準点 = X1×Y1（左下）。</div>
+
+  <h3>レベル高さ(GL基準mm)</h3>
+  <label>1F FL / CL <span><input id="l1f" type="number" value="600" style="width:56px"> <input id="l1c" type="number" value="2900" style="width:56px"></span></label>
+  <label>2F FL / CL <span><input id="l2f" type="number" value="3110" style="width:56px"> <input id="l2c" type="number" value="4930" style="width:56px"></span></label>
+
+  <h3>屋根</h3>
+  <label>種別<select id="r_type"><option value="gable">切妻(母屋)</option><option value="none">なし</option></select></label>
+  <label>棟通り(X)<input id="r_ridge" type="number" value="7.5" step="0.5"></label>
+  <label>勾配(度)<input id="r_pitch" type="number" value="20"></label>
+  <label>棟高(mm)<input id="r_z" type="number" value="6960"></label>
+  <label>軒の出(mm)<input id="r_ov" type="number" value="600"></label>
+  <label>左右等勾配<input id="r_eq" type="checkbox" checked></label>
+  <div class="hint">屋根は最上階の外壁footより生成（母屋のみ・下屋は後日）。</div>
+
+  <h3>開口の既定</h3>
+  <label>幅(mm)<input id="o_w" type="number" value="1650"></label>
+  <label>窓台/まぐさ<span><input id="o_sill" type="number" value="400" style="width:56px"> <input id="o_head" type="number" value="2200" style="width:56px"></span></label>
+  <label>種別<select id="o_type"><option>window</option><option>door</option></select></label>
+
+  <h3>JSON (house.json)</h3>
+  <div class="row"><button class="btn" id="export">生成/更新</button><button class="btn" id="copy">コピー</button><button class="btn" id="dl">保存</button></div>
+  <div class="row" style="margin-top:6px"><button class="btn" id="import">取込</button><button class="btn" id="loadex">例を読込</button><button class="btn" id="clear">全消去</button></div>
+  <textarea id="json" spellcheck="false" placeholder="ここにJSONが出力されます / 貼り付けて取込"></textarea>
+</div>
+
+<script>
+"use strict";
+const cv=document.getElementById('cv'), ctx=cv.getContext('2d');
+const S={ grid:{pitch:910,x_axes:14,y_axes:11}, half:false,
+  levels:{"1F":{fl:600,cl:2900},"2F":{fl:3110,cl:4930}},
+  walls:[], openings:[], floors:[],
+  roof:{type:"gable",ridge:7.5,pitch:20,z:6960,ov:600,eq:true} };
+let view={s:0.06, px:0, py:0};   // s=px/mm, pan in px
+let cur={lv:"1F", tool:"wall_outer", p1:null, floorPts:null};
+let wid=0;
+
+function P(){return S.grid.pitch;}
+function worldW(){return (S.grid.x_axes-1)*P();}
+function worldH(){return (S.grid.y_axes-1)*P();}
+function resize(){ cv.width=innerWidth*devicePixelRatio; cv.height=innerHeight*devicePixelRatio;
+  cv.style.width=innerWidth+'px'; cv.style.height=innerHeight+'px'; ctx.setTransform(devicePixelRatio,0,0,devicePixelRatio,1,1); draw(); }
+addEventListener('resize',resize);
+
+function fit(){ const m=60; const sw=(innerWidth-2*m)/(worldW()||1), sh=(innerHeight-2*m-120)/(worldH()||1);
+  view.s=Math.min(sw,sh); view.px=m + (innerWidth-2*m-worldW()*view.s)/2;
+  view.py=innerHeight-70 - (innerHeight-120-worldH()*view.s)/2; }
+// screen from world (y flip: world y up)
+function sx(x){return view.px + x*view.s;}
+function sy(y){return view.py - y*view.s;}
+function wx(px){return (px-view.px)/view.s;}
+function wy(py){return (view.py-py)/view.s;}
+function snapIdx(v){ const step=S.half?0.5:1; return Math.round(v/P()/step)*step; }
+function snapWorld(px,py){ const ix=snapIdx(wx(px)), iy=snapIdx(wy(py));
+  return {ix,iy,x:ix*P(),y:iy*P()}; }
+function tok(axis,idx){ const n=idx+1; return axis+(Number.isInteger(n)?n:n); }
+
+function draw(){
+  ctx.clearRect(0,0,innerWidth,innerHeight);
+  // grid
+  ctx.lineWidth=1; ctx.strokeStyle="#cfcfcf"; ctx.fillStyle="#6b6b6b"; ctx.font="11px sans-serif";
+  ctx.textAlign="center"; ctx.textBaseline="middle";
+  for(let i=0;i<S.grid.x_axes;i++){ const x=i*P();
+    ctx.beginPath(); ctx.moveTo(sx(x),sy(0)); ctx.lineTo(sx(x),sy(worldH())); ctx.stroke();
+    ctx.fillText("X"+(i+1), sx(x), sy(0)+16); }
+  for(let j=0;j<S.grid.y_axes;j++){ const y=j*P();
+    ctx.beginPath(); ctx.moveTo(sx(0),sy(y)); ctx.lineTo(sx(worldW()),sy(y)); ctx.stroke();
+    ctx.fillText("Y"+(j+1), sx(0)-16, sy(y)); }
+  // floors
+  for(const f of S.floors){ if(f.level!==cur.lv) continue;
+    ctx.fillStyle="rgba(47,109,176,.10)"; ctx.beginPath();
+    f.pts.forEach((p,k)=>{ const X=sx(p.ix*P()),Y=sy(p.iy*P()); k?ctx.lineTo(X,Y):ctx.moveTo(X,Y); });
+    ctx.closePath(); ctx.fill(); }
+  // walls
+  for(const w of S.walls){ const other=w.level!==cur.lv;
+    ctx.lineWidth=(w.kind==="outer"?7:4); ctx.strokeStyle= other?"#9aa0a6" : (w.kind==="outer"?"#111":"#3a6ea5");
+    ctx.setLineDash(other?[6,6]:[]); ctx.beginPath();
+    ctx.moveTo(sx(w.a.ix*P()),sy(w.a.iy*P())); ctx.lineTo(sx(w.b.ix*P()),sy(w.b.iy*P())); ctx.stroke(); }
+  ctx.setLineDash([]);
+  // openings
+  for(const o of S.openings){ if(o.level!==cur.lv) continue; const w=S.walls.find(w=>w.id===o.host); if(!w)continue;
+    const cx=sx(o.at.ix*P()), cy=sy(o.at.iy*P());
+    ctx.fillStyle= o.type==="door"?"#0a7d2c":"#0aa"; ctx.beginPath(); ctx.arc(cx,cy,6,0,7); ctx.fill(); }
+  // in-progress
+  if(cur.p1){ ctx.fillStyle="#e33"; ctx.beginPath(); ctx.arc(sx(cur.p1.x),sy(cur.p1.y),7,0,7); ctx.fill(); }
+  if(cur.floorPts){ ctx.strokeStyle="#e33"; ctx.lineWidth=2; ctx.setLineDash([4,4]); ctx.beginPath();
+    cur.floorPts.forEach((p,k)=>{ const X=sx(p.ix*P()),Y=sy(p.iy*P()); k?ctx.lineTo(X,Y):ctx.moveTo(X,Y); }); ctx.stroke(); ctx.setLineDash([]); }
+  document.getElementById('stat').textContent=`壁${S.walls.length} 開口${S.openings.length} 床${S.floors.length}`;
+}
+
+// ---- input: tap vs drag vs pinch ----
+let ptrs=new Map(), moved=false, downXY=null, pinch=null;
+cv.addEventListener('pointerdown',e=>{ cv.setPointerCapture(e.pointerId); ptrs.set(e.pointerId,{x:e.clientX,y:e.clientY});
+  moved=false; downXY={x:e.clientX,y:e.clientY};
+  if(ptrs.size===2){ const a=[...ptrs.values()]; pinch={d:dist(a[0],a[1]),s:view.s,cx:(a[0].x+a[1].x)/2,cy:(a[0].y+a[1].y)/2,px:view.px,py:view.py}; } });
+cv.addEventListener('pointermove',e=>{ if(!ptrs.has(e.pointerId))return; const prev=ptrs.get(e.pointerId);
+  ptrs.set(e.pointerId,{x:e.clientX,y:e.clientY});
+  if(ptrs.size===2 && pinch){ const a=[...ptrs.values()]; const nd=dist(a[0],a[1]); const r=nd/pinch.d;
+    const ncx=(a[0].x+a[1].x)/2, ncy=(a[0].y+a[1].y)/2;
+    view.s=Math.max(0.008,Math.min(0.5,pinch.s*r));
+    view.px=ncx-(pinch.cx-pinch.px)*(view.s/pinch.s); view.py=ncy-(pinch.cy-pinch.py)*(view.s/pinch.s);
+    moved=true; draw(); return; }
+  if(ptrs.size===1){ const dx=e.clientX-downXY.x, dy=e.clientY-downXY.y;
+    if(Math.abs(dx)+Math.abs(dy)>8) moved=true;
+    if(moved && (cur.tool==="pan"||true) && !cur.p1 && !cur.floorPts){ view.px+=e.clientX-prev.x; view.py+=e.clientY-prev.y; draw(); } } });
+cv.addEventListener('pointerup',e=>{ const wasPinch=ptrs.size===2; ptrs.delete(e.pointerId); if(ptrs.size<2)pinch=null;
+  if(!moved && !wasPinch) tap(e.clientX,e.clientY); moved=false; });
+function dist(a,b){return Math.hypot(a.x-b.x,a.y-b.y);}
+
+function tap(px,py){ const sn=snapWorld(px,py);
+  if(cur.tool==="wall_outer"||cur.tool==="wall_inner"){
+    if(!cur.p1){ cur.p1=sn; } else {
+      if(cur.p1.ix!==sn.ix||cur.p1.iy!==sn.iy){
+        S.walls.push({id:"W"+(++wid), kind:cur.tool==="wall_outer"?"outer":"inner", level:cur.lv,
+          a:{ix:cur.p1.ix,iy:cur.p1.iy}, b:{ix:sn.ix,iy:sn.iy}}); }
+      cur.p1=null; } }
+  else if(cur.tool==="opening"){ const w=nearestWall(px,py); if(w){ const at=projOnWall(w,sn);
+      S.openings.push({id:"O"+(++wid), host:w.id, level:cur.lv, at:at,
+        width:+val('o_w'), sill:+val('o_sill'), head:+val('o_head'), type:val('o_type')}); } }
+  else if(cur.tool==="floor"){ if(!cur.floorPts)cur.floorPts=[];
+      if(cur.floorPts.length>=3 && cur.floorPts[0].ix===sn.ix && cur.floorPts[0].iy===sn.iy){
+        S.floors.push({id:"F"+(++wid),level:cur.lv,pts:cur.floorPts}); cur.floorPts=null; }
+      else cur.floorPts.push({ix:sn.ix,iy:sn.iy}); }
+  else if(cur.tool==="erase"){ eraseNear(px,py); }
+  draw();
+}
+function nearestWall(px,py){ let best=null,bd=28; for(const w of S.walls){ if(w.level!==cur.lv)continue;
+    const d=segDistPx(px,py,w); if(d<bd){bd=d;best=w;} } return best; }
+function segDistPx(px,py,w){ const x1=sx(w.a.ix*P()),y1=sy(w.a.iy*P()),x2=sx(w.b.ix*P()),y2=sy(w.b.iy*P());
+  const dx=x2-x1,dy=y2-y1,L=dx*dx+dy*dy; let t=L?((px-x1)*dx+(py-y1)*dy)/L:0; t=Math.max(0,Math.min(1,t));
+  return Math.hypot(px-(x1+t*dx),py-(y1+t*dy)); }
+function projOnWall(w,sn){ // snap the tap to the wall line, return grid idx of nearest grid node on wall
+  return {ix:sn.ix,iy:sn.iy}; }
+function eraseNear(px,py){ const w=nearestWall(px,py); if(w){ S.walls=S.walls.filter(x=>x!==w);
+    S.openings=S.openings.filter(o=>o.host!==w.id); return; }
+  // opening?
+  for(let i=S.openings.length-1;i>=0;i--){ const o=S.openings[i]; if(o.level!==cur.lv)continue;
+    if(Math.hypot(px-sx(o.at.ix*P()),py-sy(o.at.iy*P()))<16){ S.openings.splice(i,1); return; } }
+  for(let i=S.floors.length-1;i>=0;i--){ const f=S.floors[i]; if(f.level!==cur.lv)continue;
+    if(pointInPoly(wx(px),wy(py),f.pts)){ S.floors.splice(i,1); return; } } }
+function pointInPoly(x,y,pts){ let c=false; for(let i=0,j=pts.length-1;i<pts.length;j=i++){
+  const xi=pts[i].ix*P(),yi=pts[i].iy*P(),xj=pts[j].ix*P(),yj=pts[j].iy*P();
+  if(((yi>y)!==(yj>y)) && (x<(xj-xi)*(y-yi)/(yj-yi)+xi)) c=!c; } return c; }
+
+// ---- UI ----
+function val(id){return document.getElementById(id).value;}
+document.querySelectorAll('.lv').forEach(el=>el.onclick=()=>{ document.querySelectorAll('.lv').forEach(e=>e.classList.remove('on'));
+  el.classList.add('on'); cur.lv=el.dataset.lv; cur.p1=null; cur.floorPts=null; draw(); });
+document.querySelectorAll('[data-tool]').forEach(b=>b.onclick=()=>{ document.querySelectorAll('[data-tool]').forEach(x=>x.classList.remove('on'));
+  b.classList.add('on'); cur.tool=b.dataset.tool; cur.p1=null; cur.floorPts=null; });
+document.getElementById('undo').onclick=()=>{ if(cur.floorPts&&cur.floorPts.length){cur.floorPts.pop();draw();return;}
+  if(cur.p1){cur.p1=null;draw();return;} if(S.openings.length){S.openings.pop();} else if(S.walls.length){S.walls.pop();} draw(); };
+document.getElementById('menu').onclick=()=>{ syncPanelFrom(); document.getElementById('panel').classList.add('open'); };
+document.getElementById('close').onclick=()=>{ syncPanelTo(); document.getElementById('panel').classList.remove('open'); draw(); };
+function syncPanelFrom(){ g('g_pitch',S.grid.pitch);g('g_x',S.grid.x_axes);g('g_y',S.grid.y_axes);
+  document.getElementById('g_half').checked=S.half;
+  g('l1f',S.levels['1F'].fl);g('l1c',S.levels['1F'].cl);g('l2f',S.levels['2F'].fl);g('l2c',S.levels['2F'].cl);
+  g('r_ridge',S.roof.ridge);g('r_pitch',S.roof.pitch);g('r_z',S.roof.z);g('r_ov',S.roof.ov);
+  document.getElementById('r_eq').checked=S.roof.eq; document.getElementById('r_type').value=S.roof.type; }
+function syncPanelTo(){ S.grid.pitch=+val('g_pitch');S.grid.x_axes=+val('g_x');S.grid.y_axes=+val('g_y');
+  S.half=document.getElementById('g_half').checked;
+  S.levels['1F']={fl:+val('l1f'),cl:+val('l1c')}; S.levels['2F']={fl:+val('l2f'),cl:+val('l2c')};
+  S.roof={type:val('r_type'),ridge:+val('r_ridge'),pitch:+val('r_pitch'),z:+val('r_z'),ov:+val('r_ov'),eq:document.getElementById('r_eq').checked}; }
+function g(id,v){document.getElementById(id).value=v;}
+
+// ---- export / import ----
+document.getElementById('export').onclick=()=>{ syncPanelTo(); document.getElementById('json').value=JSON.stringify(buildHouse(),null,2); };
+document.getElementById('copy').onclick=async()=>{ const t=document.getElementById('json'); t.select();
+  try{ await navigator.clipboard.writeText(t.value);}catch(e){ document.execCommand('copy'); } };
+document.getElementById('dl').onclick=()=>{ const blob=new Blob([document.getElementById('json').value||JSON.stringify(buildHouse(),null,2)],{type:'application/json'});
+  const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='house.json'; a.click(); };
+document.getElementById('import').onclick=()=>{ try{ loadHouse(JSON.parse(document.getElementById('json').value)); draw(); }catch(e){ alert('JSON解析失敗: '+e.message);} };
+document.getElementById('clear').onclick=()=>{ if(confirm('全消去しますか？')){ S.walls=[];S.openings=[];S.floors=[]; cur.p1=null;cur.floorPts=null; draw(); } };
+document.getElementById('loadex').onclick=()=>{ document.getElementById('json').value=JSON.stringify(EXAMPLE,null,2); loadHouse(EXAMPLE); draw(); };
+
+function T(axis,idx){ return axis+(idx+1); }
+function buildHouse(){
+  const walls=S.walls.map(w=>({id:w.id,kind:w.kind,level:w.level,
+    from:[T('X',w.a.ix),T('Y',w.a.iy)], to:[T('X',w.b.ix),T('Y',w.b.iy)],
+    thickness:w.kind==="outer"?150:105}));
+  const openings=S.openings.map(o=>({id:o.id,host:o.host,level:o.level,
+    at:[T('X',o.at.ix),T('Y',o.at.iy)], width:o.width, sill:o.sill, head:o.head, type:o.type}));
+  const floors=S.floors.map(f=>({id:f.id,level:f.level,
+    boundary:f.pts.map(p=>[T('X',p.ix),T('Y',p.iy)]) }));
+  const h={ schema:"wood-house/0.1", units:"mm",
+    grid:{pitch:S.grid.pitch,x_axes:S.grid.x_axes,y_axes:S.grid.y_axes,origin:[0,0,0]},
+    levels:[{id:"1F",fl:S.levels['1F'].fl,cl:S.levels['1F'].cl},{id:"2F",fl:S.levels['2F'].fl,cl:S.levels['2F'].cl}],
+    walls, openings, floors };
+  if(S.roof.type==="gable"){ const foot=topFootprint();
+    if(foot) h.roof={outlines:[{id:"母屋",type:"gable",boundary:foot,overhang:S.roof.ov,
+      ridge:{axis:"X"+S.roof.ridge, z:S.roof.z}, pitch_deg:S.roof.pitch, equal_pitch:S.roof.eq, eave_h0:[0,0],
+      finish:"ガルバリウム立平"}]}; }
+  return h;
+}
+function topFootprint(){ // bbox of highest-level outer walls (fallback: any outer)
+  let ws=S.walls.filter(w=>w.kind==="outer" && w.level==="2F"); if(!ws.length)ws=S.walls.filter(w=>w.kind==="outer");
+  if(!ws.length)return null; let xs=[],ys=[]; ws.forEach(w=>{xs.push(w.a.ix,w.b.ix);ys.push(w.a.iy,w.b.iy);});
+  const x0=Math.min(...xs),x1=Math.max(...xs),y0=Math.min(...ys),y1=Math.max(...ys);
+  return [[T('X',x0),T('Y',y0)],[T('X',x1),T('Y',y0)],[T('X',x1),T('Y',y1)],[T('X',x0),T('Y',y1)]]; }
+
+function idxFromTok(t){ return parseFloat(t.slice(1))-1; }
+function loadHouse(h){ if(h.grid){S.grid={pitch:h.grid.pitch||910,x_axes:h.grid.x_axes||14,y_axes:h.grid.y_axes||11};}
+  if(h.levels){ for(const lv of h.levels) if(S.levels[lv.id]) S.levels[lv.id]={fl:lv.fl,cl:lv.cl}; }
+  S.walls=(h.walls||[]).map(w=>({id:w.id||("W"+(++wid)),kind:w.kind||"outer",level:w.level||"1F",
+    a:{ix:idxFromTok(w.from[0]),iy:idxFromTok(w.from[1])}, b:{ix:idxFromTok(w.to[0]),iy:idxFromTok(w.to[1])}}));
+  S.openings=(h.openings||[]).map(o=>({id:o.id||("O"+(++wid)),host:o.host,level:o.level||"1F",
+    at:{ix:idxFromTok(o.at[0]),iy:idxFromTok(o.at[1])}, width:o.width||1650, sill:o.sill||400, head:o.head||2200, type:o.type||"window"}));
+  S.floors=(h.floors||[]).map(f=>({id:f.id||("F"+(++wid)),level:f.level||"1F",
+    pts:(f.boundary||[]).map(p=>({ix:idxFromTok(p[0]),iy:idxFromTok(p[1])}))}));
+  if(h.roof&&h.roof.outlines&&h.roof.outlines[0]){ const o=h.roof.outlines[0];
+    S.roof={type:"gable",ridge:o.ridge?parseFloat(o.ridge.axis.slice(1)):7.5,pitch:o.pitch_deg||20,
+      z:o.ridge?o.ridge.z:6960,ov:o.overhang||600,eq:o.equal_pitch!==false}; }
+  wid=Math.max(wid, S.walls.length+S.openings.length+S.floors.length);
+  fit(); }
+
+const EXAMPLE={ schema:"wood-house/0.1", units:"mm", grid:{pitch:910,x_axes:14,y_axes:11,origin:[0,0,0]},
+  levels:[{id:"1F",fl:600,cl:2900},{id:"2F",fl:3110,cl:4930}],
+  walls:[ {id:"OW1_W",kind:"outer",level:"1F",from:["X1","Y1"],to:["X1","Y11"]},
+    {id:"OW1_E",kind:"outer",level:"1F",from:["X14","Y1"],to:["X14","Y11"]},
+    {id:"OW1_S",kind:"outer",level:"1F",from:["X1","Y1"],to:["X14","Y1"]},
+    {id:"OW1_N",kind:"outer",level:"1F",from:["X1","Y11"],to:["X14","Y11"]},
+    {id:"IW1_1",kind:"inner",level:"1F",from:["X1","Y4"],to:["X14","Y4"]},
+    {id:"OW2_W",kind:"outer",level:"2F",from:["X1","Y4"],to:["X1","Y11"]},
+    {id:"OW2_E",kind:"outer",level:"2F",from:["X14","Y4"],to:["X14","Y11"]},
+    {id:"OW2_S",kind:"outer",level:"2F",from:["X1","Y4"],to:["X14","Y4"]},
+    {id:"OW2_N",kind:"outer",level:"2F",from:["X1","Y11"],to:["X14","Y11"]} ],
+  openings:[ {id:"W01",host:"OW1_S",level:"1F",at:["X4","Y1"],width:1650,sill:400,head:2200,type:"window"},
+    {id:"D01",host:"OW1_N",level:"1F",at:["X2","Y11"],width:900,sill:0,head:2000,type:"door"} ],
+  floors:[ {id:"F1",level:"1F",boundary:[["X1","Y1"],["X14","Y1"],["X14","Y11"],["X1","Y11"]]} ],
+  roof:{outlines:[{id:"母屋",type:"gable",boundary:[["X1","Y4"],["X14","Y4"],["X14","Y11"],["X1","Y11"]],
+    overhang:600,ridge:{axis:"X7.5",z:6960},pitch_deg:20,equal_pitch:true}]} };
+
+if(location.hash==="#demo"){ loadHouse(EXAMPLE); document.getElementById('json').value=JSON.stringify(EXAMPLE,null,2); }
+resize(); fit(); draw();
+</script>
+</body>
+</html>
