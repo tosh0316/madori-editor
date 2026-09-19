@@ -129,6 +129,7 @@ S.gx=uniform(14,910); S.gy=uniform(11,910);
 let view={s:0.06,px:0,py:0};
 let cur={lv:"1F",tool:"select",p1:null,floorPts:null,sel:null,axis:null};
 let uid=0;
+const LOFF=30;   // 通り芯番号を根本から延長する画面px量（外壁と誤タップしないため）
 
 const NX=()=>S.gx.length, NY=()=>S.gy.length;
 const WX=()=>S.gx[S.gx.length-1], WY=()=>S.gy[S.gy.length-1];
@@ -139,6 +140,12 @@ function snap(px,py){ return {i:nidx(S.gx,wx(px)), j:nidx(S.gy,wy(py))}; }
 function PW(i,j){ return [S.gx[i], S.gy[j]]; }               // grid index -> world
 function tok(a,i){ return a+(i+1); }
 function idxTok(t){ return parseInt(t.slice(1),10)-1; }
+function openSeg(o){ const w=S.walls.find(w=>w.id===o.host); if(!w)return null;
+  const A=PW(w.a.i,w.a.j),B=PW(w.b.i,w.b.j); let dx=B[0]-A[0],dy=B[1]-A[1]; const L=Math.hypot(dx,dy)||1; dx/=L;dy/=L;
+  const P=PW(o.at.i,o.at.j); const hw=(o.width||1200)/2;
+  return {a:[P[0]-dx*hw,P[1]-dy*hw], b:[P[0]+dx*hw,P[1]+dy*hw]}; }
+function segDistW(px,py,A,B){ const x1=sx(A[0]),y1=sy(A[1]),x2=sx(B[0]),y2=sy(B[1]); const dx=x2-x1,dy=y2-y1,L=dx*dx+dy*dy;
+  let t=L?((px-x1)*dx+(py-y1)*dy)/L:0; t=Math.max(0,Math.min(1,t)); return Math.hypot(px-(x1+t*dx),py-(y1+t*dy)); }
 
 function resize(){ cv.width=innerWidth*devicePixelRatio; cv.height=innerHeight*devicePixelRatio;
   cv.style.width=innerWidth+'px'; cv.style.height=innerHeight+'px'; ctx.setTransform(devicePixelRatio,0,0,devicePixelRatio,0,0); draw(); }
@@ -150,14 +157,19 @@ function draw(){
   ctx.clearRect(0,0,innerWidth,innerHeight);
   // grid + labels
   ctx.lineWidth=1; ctx.font="11px sans-serif"; ctx.textAlign="center"; ctx.textBaseline="middle";
+  const gy0=S.gy[0], gx0=S.gx[0];
   for(let i=0;i<NX();i++){ const x=S.gx[i]; const on=cur.axis&&cur.axis.a==='x'&&cur.axis.i===i;
     ctx.strokeStyle=on?"#e33":"#cfcfcf"; ctx.lineWidth=on?2:1;
-    ctx.beginPath(); ctx.moveTo(sx(x),sy(0)); ctx.lineTo(sx(x),sy(WY())); ctx.stroke();
-    ctx.fillStyle=on?"#e33":"#5a5a5a"; ctx.fillText("X"+(i+1), sx(x), sy(0)+16); }
+    ctx.beginPath(); ctx.moveTo(sx(x),sy(gy0)); ctx.lineTo(sx(x),sy(WY())); ctx.stroke();
+    ctx.strokeStyle=on?"#e33":"#b0b0b0"; ctx.lineWidth=1;   // 根本延長スタブ
+    ctx.beginPath(); ctx.moveTo(sx(x),sy(gy0)); ctx.lineTo(sx(x),sy(gy0)+LOFF); ctx.stroke();
+    ctx.fillStyle=on?"#e33":"#5a5a5a"; ctx.fillText("X"+(i+1), sx(x), sy(gy0)+LOFF+8); }
   for(let j=0;j<NY();j++){ const y=S.gy[j]; const on=cur.axis&&cur.axis.a==='y'&&cur.axis.i===j;
     ctx.strokeStyle=on?"#e33":"#cfcfcf"; ctx.lineWidth=on?2:1;
-    ctx.beginPath(); ctx.moveTo(sx(0),sy(y)); ctx.lineTo(sx(WX()),sy(y)); ctx.stroke();
-    ctx.fillStyle=on?"#e33":"#5a5a5a"; ctx.fillText("Y"+(j+1), sx(0)-16, sy(y)); }
+    ctx.beginPath(); ctx.moveTo(sx(gx0),sy(y)); ctx.lineTo(sx(WX()),sy(y)); ctx.stroke();
+    ctx.strokeStyle=on?"#e33":"#b0b0b0"; ctx.lineWidth=1;
+    ctx.beginPath(); ctx.moveTo(sx(gx0),sy(y)); ctx.lineTo(sx(gx0)-LOFF,sy(y)); ctx.stroke();
+    ctx.fillStyle=on?"#e33":"#5a5a5a"; ctx.fillText("Y"+(j+1), sx(gx0)-LOFF-11, sy(y)); }
   // floors
   for(const f of S.floors){ if(f.level!==cur.lv)continue; ctx.fillStyle="rgba(47,109,176,.08)";
     ctx.beginPath(); f.pts.forEach((p,k)=>{const w=PW(p.i,p.j); k?ctx.lineTo(sx(w[0]),sy(w[1])):ctx.moveTo(sx(w[0]),sy(w[1]));}); ctx.closePath(); ctx.fill(); }
@@ -171,10 +183,10 @@ function draw(){
     ctx.setLineDash(other?[6,6]:[]); const a=PW(w.a.i,w.a.j),b=PW(w.b.i,w.b.j);
     ctx.beginPath(); ctx.moveTo(sx(a[0]),sy(a[1])); ctx.lineTo(sx(b[0]),sy(b[1])); ctx.stroke(); }
   ctx.setLineDash([]);
-  // openings
-  for(const o of S.openings){ if(o.level!==cur.lv)continue; const w=S.walls.find(w=>w.id===o.host); if(!w)continue;
-    const p=PW(o.at.i,o.at.j); const seld=cur.sel&&cur.sel.o===o;
-    ctx.fillStyle= seld?"#e33":(o.type==="door"?"#0a7d2c":"#0aa"); ctx.beginPath(); ctx.arc(sx(p[0]),sy(p[1]),seld?9:6,0,7); ctx.fill(); }
+  // openings（幅に応じた太線でホスト壁に沿って表示）
+  for(const o of S.openings){ if(o.level!==cur.lv)continue; const sg=openSeg(o); if(!sg)continue; const seld=cur.sel&&cur.sel.o===o;
+    ctx.strokeStyle= seld?"#e33":(o.type==="door"?"#0a7d2c":"#0aa"); ctx.lineWidth=seld?10:8; ctx.lineCap="round";
+    ctx.beginPath(); ctx.moveTo(sx(sg.a[0]),sy(sg.a[1])); ctx.lineTo(sx(sg.b[0]),sy(sg.b[1])); ctx.stroke(); ctx.lineCap="butt"; }
   // in-progress
   if(cur.p1){ const w=PW(cur.p1.i,cur.p1.j); ctx.fillStyle="#e33"; ctx.beginPath(); ctx.arc(sx(w[0]),sy(w[1]),7,0,7); ctx.fill(); }
   if(cur.floorPts){ ctx.strokeStyle="#e33"; ctx.lineWidth=2; ctx.setLineDash([4,4]); ctx.beginPath();
@@ -199,8 +211,8 @@ cv.addEventListener('pointerup',e=>{ const two=ptrs.size===2; ptrs.delete(e.poin
   if(!moved && !two) tap(e.clientX,e.clientY); moved=false; });
 function dist(a,b){return Math.hypot(a.x-b.x,a.y-b.y);}
 
-function inXgutter(py){ return py>sy(0) && py<sy(0)+30; }
-function inYgutter(px){ return px<sx(0) && px>sx(0)-34; }
+function inXgutter(py){ const b=sy(S.gy[0]); return py>b+10 && py<b+LOFF+22; }
+function inYgutter(px){ const b=sx(S.gx[0]); return px<b-10 && px>b-LOFF-24; }
 function hitAxis(px,py,ax){ if(ax.a==='x') return Math.abs(px-sx(S.gx[ax.i]))<20; return Math.abs(py-sy(S.gy[ax.i]))<20; }
 function moveAxisTo(ax,px,py){ if(ax.a==='x'){ let v=Math.round(wx(px)/5)*5; v=clampAxis(S.gx,ax.i,v); S.gx[ax.i]=v; } else { let v=Math.round(wy(py)/5)*5; v=clampAxis(S.gy,ax.i,v); S.gy[ax.i]=v; } }
 function clampAxis(arr,i,v){ const lo=i>0?arr[i-1]+100:-1e9, hi=i<arr.length-1?arr[i+1]-100:1e9; return Math.max(lo,Math.min(hi,v)); }
@@ -233,7 +245,7 @@ function segDist(px,py,a,b){ const A=PW(a.i,a.j),B=PW(b.i,b.j); const x1=sx(A[0]
   const dx=x2-x1,dy=y2-y1,L=dx*dx+dy*dy; let t=L?((px-x1)*dx+(py-y1)*dy)/L:0; t=Math.max(0,Math.min(1,t)); return Math.hypot(px-(x1+t*dx),py-(y1+t*dy)); }
 function nearestWall(px,py){ let best=null,bd=26; for(const w of S.walls){ if(w.level!==cur.lv)continue; const d=segDist(px,py,w.a,w.b); if(d<bd){bd=d;best=w;} } return best; }
 function pick(px,py){ // openings first, then walls, then rooms
-  for(const o of S.openings){ if(o.level!==cur.lv)continue; const p=PW(o.at.i,o.at.j); if(Math.hypot(px-sx(p[0]),py-sy(p[1]))<16) return {type:'opening',o}; }
+  for(const o of S.openings){ if(o.level!==cur.lv)continue; const sg=openSeg(o); if(sg && segDistW(px,py,sg.a,sg.b)<12) return {type:'opening',o}; }
   const w=nearestWall(px,py); if(w) return {type:'wall',o:w};
   for(const r of S.rooms){ if(r.level!==cur.lv)continue; if(ptInPoly(wx(px),wy(py),r.pts)) return {type:'room',o:r}; }
   for(const f of S.floors){ if(f.level!==cur.lv)continue; if(ptInPoly(wx(px),wy(py),f.pts)) return {type:'floor',o:f}; }
