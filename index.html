@@ -15,10 +15,10 @@
   #top b{ font-weight:600; }
   .lv{ padding:3px 9px; border-radius:12px; background:#fff3; }
   .lv.on{ background:var(--accent); }
-  #bar{ position:fixed; bottom:0; left:0; right:0; z-index:5; display:flex; flex-wrap:wrap;
-        gap:6px; padding:8px; background:rgba(20,20,20,.82); }
-  .btn{ flex:1 1 auto; min-width:52px; text-align:center; padding:11px 4px; border-radius:8px;
-        background:#3a3a3a; color:#eee; font-size:13px; border:none; }
+  #bar{ position:fixed; bottom:0; left:0; right:0; z-index:5; display:flex; flex-wrap:nowrap;
+        gap:5px; padding:8px; background:rgba(20,20,20,.82); overflow-x:auto; -webkit-overflow-scrolling:touch; }
+  .btn{ flex:0 0 auto; min-width:50px; text-align:center; padding:11px 8px; border-radius:8px;
+        background:#3a3a3a; color:#eee; font-size:13px; border:none; white-space:nowrap; }
   .btn.on{ background:var(--accent); color:#fff; }
   .btn.act{ background:#5a5a5a; }
   .sheet{ position:fixed; left:0; right:0; bottom:58px; z-index:7; background:var(--panel);
@@ -55,6 +55,7 @@
   #three .modes{ position:fixed; top:12px; left:50%; transform:translateX(-50%); z-index:9; display:flex; gap:4px; }
   #three .modes button{ background:#3a3a3acc; color:#eee; border:none; padding:8px 12px; border-radius:8px; font-size:13px; }
   #three .modes button.on{ background:var(--accent); color:#fff; }
+  #three .vfl{ top:52px; }
   .dlab{ position:fixed; z-index:9; font-size:11px; color:#123; background:#fffb; padding:1px 5px; border-radius:4px; transform:translateY(-50%); white-space:nowrap; pointer-events:none; display:none; }
 </style>
 </head>
@@ -93,6 +94,7 @@
   <div class="x3" id="c3d">×</div>
   <button class="u3" id="u3d">↻ 更新</button>
   <div class="modes" id="modes"><button data-m="3d" class="on">3D</button><button data-m="elevX">X立面</button><button data-m="elevY">Y立面</button></div>
+  <div class="modes vfl" id="vfloors"><button data-f="all" class="on">全体</button><button data-f="le2">〜2F</button><button data-f="1F">1F</button></div>
   <div class="tag">ドラッグ=回転 / ピンチ=ズーム / 2本指=移動</div>
 </div>
 
@@ -404,24 +406,58 @@ function loadHouse(h){ const g=h.grid||{};
 const EXAMPLE={ schema:"wood-house/0.2",units:"mm",grid:{pitch:910,x_axes:14,y_axes:11,origin:[0,0,0]},
   datums:DEF_DATUMS,
   levels:[{id:"1F",fl:600,cl:2900},{id:"2F",fl:3110,cl:4930}],
-  walls:[ {id:"OW1_W",kind:"outer",level:"1F",from:["X1","Y1"],to:["X1","Y11"],base:"1FL",top:"2F梁天端"},
-    {id:"OW1_E",kind:"outer",level:"1F",from:["X14","Y1"],to:["X14","Y11"],base:"1FL",top:"2F梁天端"},
+  walls:[
     {id:"OW1_S",kind:"outer",level:"1F",from:["X1","Y1"],to:["X14","Y1"],base:"1FL",top:"2F梁天端"},
+    {id:"OW1_E",kind:"outer",level:"1F",from:["X14","Y1"],to:["X14","Y11"],base:"1FL",top:"2F梁天端"},
     {id:"OW1_N",kind:"outer",level:"1F",from:["X1","Y11"],to:["X14","Y11"],base:"1FL",top:"2F梁天端"},
-    {id:"IW1_1",kind:"inner",level:"1F",from:["X1","Y4"],to:["X14","Y4"],base:"1FL",top:"2F梁天端"},
-    {id:"IW1_2",kind:"inner",level:"1F",from:["X6","Y1"],to:["X6","Y4"],base:"1FL",top:"2F梁天端"},
-    {id:"OW2_W",kind:"outer",level:"2F",from:["X1","Y4"],to:["X1","Y11"],base:"2FL",top:"軒高"},
-    {id:"OW2_E",kind:"outer",level:"2F",from:["X14","Y4"],to:["X14","Y11"],base:"2FL",top:"軒高"},
-    {id:"OW2_S",kind:"outer",level:"2F",from:["X1","Y4"],to:["X14","Y4"],base:"2FL",top:"軒高"},
-    {id:"OW2_N",kind:"outer",level:"2F",from:["X1","Y11"],to:["X14","Y11"],base:"2FL",top:"軒高"} ],
-  openings:[ {id:"W01",host:"OW1_S",level:"1F",at:["X4","Y1"],width:1650,sill:400,head:2200,type:"window"},
-    {id:"D01",host:"OW1_N",level:"1F",at:["X2","Y11"],width:900,sill:0,head:2000,type:"door"} ],
-  floors:[ {id:"F1",level:"1F",finish:"無垢フローリング",boundary:[["X1","Y1"],["X14","Y1"],["X14","Y11"],["X1","Y11"]]} ],
-  rooms:[ {id:"R1",name:"LDK",level:"1F",boundary:[["X1","Y4"],["X6","Y4"],["X6","Y11"],["X1","Y11"]]} ],
-  roof:{outlines:[{id:"母屋",type:"gable",boundary:[["X1","Y4"],["X14","Y4"],["X14","Y11"],["X1","Y11"]],overhang:600,ridge:{axis:"X7.5",z:6960},pitch_deg:20,equal_pitch:true}]} };
+    {id:"OW1_W",kind:"outer",level:"1F",from:["X1","Y1"],to:["X1","Y11"],base:"1FL",top:"2F梁天端"},
+    {id:"IW_X4",kind:"inner",level:"1F",from:["X4","Y1"],to:["X4","Y11"],base:"1FL",top:"2F梁天端"},
+    {id:"IW_Y4w",kind:"inner",level:"1F",from:["X1","Y4"],to:["X4","Y4"],base:"1FL",top:"2F梁天端"},
+    {id:"IW_Y8w",kind:"inner",level:"1F",from:["X1","Y8"],to:["X4","Y8"],base:"1FL",top:"2F梁天端"},
+    {id:"IW_X12",kind:"inner",level:"1F",from:["X12","Y1"],to:["X12","Y3"],base:"1FL",top:"2F梁天端"},
+    {id:"IW_Y3e",kind:"inner",level:"1F",from:["X12","Y3"],to:["X14","Y3"],base:"1FL",top:"2F梁天端"},
+    {id:"OW2_S",kind:"outer",level:"2F",from:["X1","Y1"],to:["X14","Y1"],base:"2FL",top:"軒高"},
+    {id:"OW2_E",kind:"outer",level:"2F",from:["X14","Y1"],to:["X14","Y11"],base:"2FL",top:"軒高"},
+    {id:"OW2_N",kind:"outer",level:"2F",from:["X1","Y11"],to:["X14","Y11"],base:"2FL",top:"軒高"},
+    {id:"OW2_W",kind:"outer",level:"2F",from:["X1","Y1"],to:["X1","Y11"],base:"2FL",top:"軒高"},
+    {id:"IW2_X7",kind:"inner",level:"2F",from:["X7","Y1"],to:["X7","Y11"],base:"2FL",top:"軒高"},
+    {id:"IW2_Y6w",kind:"inner",level:"2F",from:["X1","Y6"],to:["X7","Y6"],base:"2FL",top:"軒高"},
+    {id:"IW2_Y6e",kind:"inner",level:"2F",from:["X7","Y6"],to:["X14","Y6"],base:"2FL",top:"軒高"} ],
+  openings:[
+    {id:"D_genkan",host:"OW1_S",level:"1F",at:["X2","Y1"],width:900,sill:0,head:2000,type:"door"},
+    {id:"W_ldk_s1",host:"OW1_S",level:"1F",at:["X6","Y1"],width:2730,sill:0,head:2200,type:"window"},
+    {id:"W_ldk_s2",host:"OW1_S",level:"1F",at:["X10","Y1"],width:1650,sill:400,head:2200,type:"window"},
+    {id:"W_ldk_e",host:"OW1_E",level:"1F",at:["X14","Y7"],width:1650,sill:400,head:2200,type:"window"},
+    {id:"W_bath_w",host:"OW1_W",level:"1F",at:["X1","Y6"],width:800,sill:900,head:2000,type:"window"},
+    {id:"W_bed1_s",host:"OW2_S",level:"2F",at:["X3","Y1"],width:1650,sill:300,head:2000,type:"window"},
+    {id:"W_bed2_s",host:"OW2_S",level:"2F",at:["X11","Y1"],width:1650,sill:300,head:2000,type:"window"},
+    {id:"W_master_n",host:"OW2_N",level:"2F",at:["X3","Y11"],width:1650,sill:300,head:2000,type:"window"},
+    {id:"W_hall_n",host:"OW2_N",level:"2F",at:["X11","Y11"],width:1650,sill:300,head:2000,type:"window"},
+    {id:"W_bed1_w",host:"OW2_W",level:"2F",at:["X1","Y3"],width:1200,sill:300,head:2000,type:"window"} ],
+  fittings:[
+    {id:"F_gen",host:"IW_X4",level:"1F",at:["X4","Y2"],width:900,sill:0,head:2000,type:"開き戸"},
+    {id:"F_bath",host:"IW_Y4w",level:"1F",at:["X2","Y4"],width:750,sill:0,head:2000,type:"引戸"},
+    {id:"F_stair",host:"IW_Y8w",level:"1F",at:["X2","Y8"],width:900,sill:0,head:2000,type:"引戸"},
+    {id:"F_wc",host:"IW_X12",level:"1F",at:["X12","Y2"],width:700,sill:0,head:2000,type:"開き戸"},
+    {id:"F_bed1",host:"IW2_X7",level:"2F",at:["X7","Y3"],width:900,sill:0,head:2000,type:"引戸"},
+    {id:"F_hall",host:"IW2_Y6e",level:"2F",at:["X10","Y6"],width:900,sill:0,head:2000,type:"引戸"} ],
+  floors:[
+    {id:"F1",level:"1F",finish:"無垢フローリング",boundary:[["X1","Y1"],["X14","Y1"],["X14","Y11"],["X1","Y11"]]},
+    {id:"F2",level:"2F",finish:"無垢フローリング",boundary:[["X1","Y1"],["X14","Y1"],["X14","Y11"],["X1","Y11"]]} ],
+  rooms:[
+    {id:"R_gen",name:"玄関",level:"1F",boundary:[["X1","Y1"],["X4","Y1"],["X4","Y4"],["X1","Y4"]]},
+    {id:"R_bath",name:"洗面浴室",level:"1F",boundary:[["X1","Y4"],["X4","Y4"],["X4","Y8"],["X1","Y8"]]},
+    {id:"R_stair",name:"階段",level:"1F",boundary:[["X1","Y8"],["X4","Y8"],["X4","Y11"],["X1","Y11"]]},
+    {id:"R_ldk",name:"LDK",level:"1F",boundary:[["X4","Y1"],["X14","Y1"],["X14","Y11"],["X4","Y11"]]},
+    {id:"R_wc",name:"WC",level:"1F",boundary:[["X12","Y1"],["X14","Y1"],["X14","Y3"],["X12","Y3"]]},
+    {id:"R_bed1",name:"子供室1",level:"2F",boundary:[["X1","Y1"],["X7","Y1"],["X7","Y6"],["X1","Y6"]]},
+    {id:"R_master",name:"主寝室",level:"2F",boundary:[["X1","Y6"],["X7","Y6"],["X7","Y11"],["X1","Y11"]]},
+    {id:"R_bed2",name:"子供室2",level:"2F",boundary:[["X7","Y1"],["X14","Y1"],["X14","Y6"],["X7","Y6"]]},
+    {id:"R_hall",name:"ホール",level:"2F",boundary:[["X7","Y6"],["X14","Y6"],["X14","Y11"],["X7","Y11"]]} ],
+  roof:{outlines:[{id:"母屋",type:"gable",boundary:[["X1","Y1"],["X14","Y1"],["X14","Y11"],["X1","Y11"]],overhang:600,ridge:{axis:"X7.5",z:6960},pitch_deg:22,equal_pitch:true}]} };
 
 window.getHouse=()=>buildHouse();
-if(location.hash==="#demo"){ loadHouse(EXAMPLE); }
+loadHouse(EXAMPLE);   // 初期表示はサンプル住宅（全消去で空にできる）
 resize(); fit(); draw();
 </script>
 
@@ -429,7 +465,7 @@ resize(); fit(); draw();
 import * as THREE from 'three';
 import {OrbitControls} from 'https://unpkg.com/three@0.160.0/examples/jsm/controls/OrbitControls.js';
 const host=document.getElementById('three');
-let renderer,scene,camP,camO,camera,controls,root,datumGrp,inited=false,mode='3d',lastH=null;
+let renderer,scene,camP,camO,camera,controls,root,datumGrp,inited=false,mode='3d',lastH=null,vfloor='all';
 let labelEls=[],labelPos=[];
 function onResize(){ if(!renderer)return; renderer.setSize(innerWidth,innerHeight);
   if(camP){camP.aspect=innerWidth/innerHeight;camP.updateProjectionMatrix();} if(mode!=='3d')applyOrtho(); }
@@ -467,20 +503,22 @@ function build(){ if(!inited)return; clearRoot(); const h=window.getHouse(); con
   for(const w of (h.walls||[])){ const a=rp(w.from,g),b=rp(w.to,g);
     let z0,z1; if(w.base&&h.datums){ z0=zOf(h,w.base,w.h0); z1=zOf(h,w.top,w.h1); } else { const L=lv[w.level]||{fl:0,cl:2500}; z0=L.fl; z1=L.cl; }
     const th=w.thickness||(w.kind==='outer'?150:105); const isTop=w.level===topLevel;
-    const m=wallMesh(a,b,z0,z1,th,w.kind==='outer'?0xe2e2e0:0xc2c7cc,isTop,h); if(m)root.add(m); }
+    const m=wallMesh(a,b,z0,z1,th,w.kind==='outer'?0xe2e2e0:0xc2c7cc,isTop,h); if(m){m.userData.lvl=w.level; root.add(m);} }
   for(const f of (h.floors||[])){ const L=lv[f.level]||{fl:0}; const sh=new THREE.Shape(); (f.boundary||[]).forEach((p,i)=>{const q=rp(p,g); i?sh.lineTo(q[0],q[1]):sh.moveTo(q[0],q[1]);});
-    const m=new THREE.Mesh(new THREE.ShapeGeometry(sh),new THREE.MeshLambertMaterial({color:0xd6cfc2,side:THREE.DoubleSide})); m.rotation.x=-Math.PI/2; m.position.y=(L.fl||0)+2; root.add(m); }
+    const m=new THREE.Mesh(new THREE.ShapeGeometry(sh),new THREE.MeshLambertMaterial({color:0xd6cfc2,side:THREE.DoubleSide})); m.rotation.x=-Math.PI/2; m.position.y=(L.fl||0)+2; m.userData.lvl=f.level; root.add(m); }
   const drawOpen=(arr,col)=>{ for(const o of (arr||[])){ const w=(h.walls||[]).find(x=>x.id===o.host); if(!w)continue; const a=rp(w.from,g),b=rp(w.to,g); const ang=Math.atan2(b[1]-a[1],b[0]-a[0]); const at=rp(o.at,g);
     const base=(w.base&&h.datums)?zOf(h,w.base,w.h0):((lv[o.level]||{fl:0}).fl); const H=(o.head-o.sill)||1000,wd=o.width||1200,th=(w.thickness||150)+50;
     const c = col!=null?col:(o.type==='door'?0x8a6b45:0x8fc3e6);
     const m=new THREE.Mesh(new THREE.BoxGeometry(wd,H,th),new THREE.MeshLambertMaterial({color:c,transparent:true,opacity:.8}));
-    m.position.set(at[0], base+(o.sill+o.head)/2, -at[1]); m.rotation.y=-ang; root.add(m); } };
+    m.position.set(at[0], base+(o.sill+o.head)/2, -at[1]); m.rotation.y=-ang; m.userData.lvl=o.level; root.add(m); } };
   drawOpen(h.openings,null); drawOpen(h.fittings,0xc07a2b);
   if(h.roof&&h.roof.outlines){ for(const o of h.roof.outlines){ if(o.type!=='gable'||!o.ridge)continue; const pts=(o.boundary||[]).map(p=>rp(p,g)); if(!pts.length)continue;
     const xs=pts.map(p=>p[0]),ys=pts.map(p=>p[1]); const ov=o.overhang||0; const x0=Math.min(...xs)-ov,x1=Math.max(...xs)+ov,y0=Math.min(...ys)-ov,y1=Math.max(...ys)+ov;
     const xp=g.x_positions,p=g.pitch||910; const ri=parseFloat(o.ridge.axis.slice(1))-1; const rx=xp?xp[Math.round(ri)]:ri*p; const rz=o.ridge.z; const t=Math.tan((o.pitch_deg||20)*Math.PI/180);
-    root.add(panel(x0,rz-t*(rx-x0),rx,rz,y0,y1)); root.add(panel(rx,rz,x1,rz-t*(x1-rx),y0,y1)); } }
-  lastH=h; setMode(mode); }
+    const pa=panel(x0,rz-t*(rx-x0),rx,rz,y0,y1),pb=panel(rx,rz,x1,rz-t*(x1-rx),y0,y1); pa.userData.lvl='roof'; pb.userData.lvl='roof'; root.add(pa); root.add(pb); } }
+  lastH=h; setMode(mode); setVFloor(vfloor); }
+function setVFloor(f){ vfloor=f; document.querySelectorAll('#vfloors button').forEach(b=>b.classList.toggle('on',b.dataset.f===f));
+  root.children.forEach(m=>{ const L=m.userData.lvl; if(f==='all')m.visible=true; else if(f==='1F')m.visible=(L==='1F'); else m.visible=(L!=='roof'); }); }
 function bbox(){ return new THREE.Box3().setFromObject(root); }
 function frame3D(){ const box=bbox(); if(box.isEmpty())return; const c=box.getCenter(new THREE.Vector3()),s=box.getSize(new THREE.Vector3()); const r=Math.max(s.x,s.y,s.z,3000);
   camP.position.set(c.x-r*1.1,c.y+r*0.85,c.z+r*1.25); camP.near=r/100; camP.far=r*20; camP.updateProjectionMatrix(); controls.target.copy(c); controls.update(); }
@@ -513,6 +551,7 @@ document.getElementById('btn3d').onclick=()=>{ host.classList.add('on'); if(!ini
 document.getElementById('c3d').onclick=()=>{ host.classList.remove('on'); labelEls.forEach(e=>e.style.display='none'); };
 document.getElementById('u3d').onclick=()=>build();
 document.querySelectorAll('#modes button').forEach(b=>b.onclick=()=>setMode(b.dataset.m));
+document.querySelectorAll('#vfloors button').forEach(b=>b.onclick=()=>setVFloor(b.dataset.f));
 </script>
 </body>
 </html>
