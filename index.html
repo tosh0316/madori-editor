@@ -16,9 +16,9 @@
   .lv{ padding:3px 9px; border-radius:12px; background:#fff3; }
   .lv.on{ background:var(--accent); }
   #bar{ position:fixed; bottom:0; left:0; right:0; z-index:5; display:flex; flex-wrap:nowrap;
-        gap:5px; padding:8px; background:rgba(20,20,20,.82); overflow-x:auto; -webkit-overflow-scrolling:touch; }
-  .btn{ flex:0 0 auto; min-width:50px; text-align:center; padding:11px 8px; border-radius:8px;
-        background:#3a3a3a; color:#eee; font-size:13px; border:none; white-space:nowrap; }
+        gap:4px; padding:6px 5px; background:rgba(20,20,20,.82); }
+  .btn{ flex:1 1 0; min-width:0; text-align:center; padding:11px 2px; border-radius:7px;
+        background:#3a3a3a; color:#eee; font-size:12px; border:none; white-space:nowrap; }
   .btn.on{ background:var(--accent); color:#fff; }
   .btn.act{ background:#5a5a5a; }
   .sheet{ position:fixed; left:0; right:0; bottom:58px; z-index:7; background:var(--panel);
@@ -224,10 +224,12 @@ function drawFitting(o,cat){ const w=S.walls.find(x=>x.id===o.host); if(!w)retur
   fillPolyW([P(-hw,t/2+3),P(-hw,-t/2-3),P(hw,-t/2-3),P(hw,t/2+3)],'#fff');   // 壁を開口で抜く
   lineW(P(-hw,t/2),P(-hw,-t/2),'#111',1.6); lineW(P(hw,t/2),P(hw,-t/2),'#111',1.6);  // 方立(ジャム)
   if(cat==='window'){ lineW(P(-hw,t/6),P(hw,t/6),'#111',1); lineW(P(-hw,-t/6),P(hw,-t/6),'#111',1); lineW(P(-hw,0),P(hw,0),'#111',1); }
-  else if(cat==='hinge'){ const hinge=P(-hw,0); const openPt=P(-hw,2*hw);
-    lineW(hinge,openPt,'#111',1.6); const cX=sx(hinge[0]),cY=sy(hinge[1]); const oX=sx(openPt[0]),oY=sy(openPt[1]); const dE=P(hw,0); const eX=sx(dE[0]),eY=sy(dE[1]);
-    const r=Math.hypot(oX-cX,oY-cY); const a0=Math.atan2(oY-cY,oX-cX),a1=Math.atan2(eY-cY,eX-cX);
-    ctx.strokeStyle='#111';ctx.lineWidth=1;ctx.beginPath();ctx.arc(cX,cY,r,Math.min(a0,a1),Math.max(a0,a1));ctx.stroke(); }
+  else if(cat==='hinge'){ const hinge=P(-hw,0); const openPt=P(-hw,2*hw); const dE=P(hw,0);
+    lineW(hinge,openPt,'#111',1.6);   // 開いた扉の葉
+    const cX=sx(hinge[0]),cY=sy(hinge[1]); const oX=sx(openPt[0]),oY=sy(openPt[1]); const eX=sx(dE[0]),eY=sy(dE[1]);
+    const r=Math.hypot(oX-cX,oY-cY); const aC=Math.atan2(eY-cY,eX-cX), aO=Math.atan2(oY-cY,oX-cX);
+    let d=aO-aC; while(d>Math.PI)d-=2*Math.PI; while(d<-Math.PI)d+=2*Math.PI;   // 90°側(短い弧)を描く
+    ctx.strokeStyle='#111';ctx.lineWidth=1;ctx.beginPath();ctx.arc(cX,cY,r,aC,aO,d<0);ctx.stroke(); }
   else { lineW(P(-hw,t/5),P(hw*0.08,t/5),'#111',2.2); lineW(P(-hw*0.08,-t/5),P(hw,-t/5),'#111',2.2); }  // 引戸(2枚)
 }
 function drawPlan(){
@@ -539,8 +541,13 @@ function roofZAt(h,x,y){ let best=null; if(h.roof&&h.roof.outlines){ for(const o
   const z=x<=rx?o.ridge.z-t*(rx-x):o.ridge.z-t*(x-rx); best=best===null?z:Math.min(best,z); } } return best; }
 function wallMesh(a,b,z0,z1,th,color,isTop,h){ const dx=b[0]-a[0],dy=b[1]-a[1]; const len=Math.hypot(dx,dy); if(len<1)return null; const ux=dx/len,uy=dy/len;
   const topAt=s=>{ const x=a[0]+ux*s,y=a[1]+uy*s; const rz=roofZAt(h,x,y); let tv; if(rz==null)tv=z1; else if(isTop)tv=rz; else tv=Math.min(z1,rz); return Math.max(z0+20,tv); };
-  const N=Math.max(4,Math.min(80,Math.ceil(len/300))); const sh=new THREE.Shape(); sh.moveTo(0,z0); sh.lineTo(len,z0);
-  for(let k=N;k>=0;k--){ const s=len*k/N; sh.lineTo(s,topAt(s)); }
+  // 屋根面と厳密一致させるため、棟(ridge)を横切る位置を折れ点に（面は区間内で線形＝完全一致）
+  const bps=[0,len];
+  if(h.roof&&h.roof.outlines){ for(const o of h.roof.outlines){ if(o.type!=='gable'||!o.ridge)continue;
+    const rx=axPos(h.grid.x_positions, parseFloat(o.ridge.axis.slice(1))-1, h.grid.pitch);
+    if(Math.abs(ux)>1e-6){ const s=(rx-a[0])/ux; if(s>1&&s<len-1)bps.push(s); } } }
+  bps.sort((p,q)=>p-q); const sh=new THREE.Shape(); sh.moveTo(0,z0); sh.lineTo(len,z0);
+  for(let k=bps.length-1;k>=0;k--){ sh.lineTo(bps[k],topAt(bps[k])); }
   const geo=new THREE.ExtrudeGeometry(sh,{depth:th,bevelEnabled:false});
   const dir3=new THREE.Vector3(ux,0,-uy),up3=new THREE.Vector3(0,1,0); const perp3=new THREE.Vector3().crossVectors(dir3,up3).normalize();
   const m=new THREE.Matrix4().makeBasis(dir3,up3,perp3); m.setPosition(a[0]-perp3.x*th/2,-perp3.y*th/2,-a[1]-perp3.z*th/2);
@@ -557,10 +564,13 @@ function build(){ if(!inited)return; clearRoot(); const h=window.getHouse(); con
   for(const f of (h.floors||[])){ const L=lv[f.level]||{fl:0}; const sh=new THREE.Shape(); (f.boundary||[]).forEach((p,i)=>{const q=rp(p,g); i?sh.lineTo(q[0],q[1]):sh.moveTo(q[0],q[1]);});
     const m=new THREE.Mesh(new THREE.ShapeGeometry(sh),new THREE.MeshLambertMaterial({color:0xd6cfc2,side:THREE.DoubleSide})); m.rotation.x=-Math.PI/2; m.position.y=(L.fl||0)+2; m.userData.lvl=f.level; root.add(m); }
   const drawOpen=(arr,col)=>{ for(const o of (arr||[])){ const w=(h.walls||[]).find(x=>x.id===o.host); if(!w)continue; const a=rp(w.from,g),b=rp(w.to,g); const ang=Math.atan2(b[1]-a[1],b[0]-a[0]); const at=rp(o.at,g);
-    const base=(w.base&&h.datums)?zOf(h,w.base,w.h0):((lv[o.level]||{fl:0}).fl); const H=(o.head-o.sill)||1000,wd=o.width||1200,th=(w.thickness||150)+50;
+    const base=(w.base&&h.datums)?zOf(h,w.base,w.h0):((lv[o.level]||{fl:0}).fl);
+    let botA=base+(o.sill||0), topA=base+(o.head||2000);
+    if(w.level===topLevel){ const rz=roofZAt(h,at[0],at[1]); if(rz!=null&&rz<topA) topA=Math.max(botA+50,rz); }  // 開口も屋根で切断
+    const H=Math.max(50,topA-botA), wd=o.width||1200, th=(w.thickness||150)+50;
     const c = col!=null?col:(o.type==='door'?0x8a6b45:0x8fc3e6);
     const m=new THREE.Mesh(new THREE.BoxGeometry(wd,H,th),new THREE.MeshLambertMaterial({color:c,transparent:true,opacity:.8}));
-    m.position.set(at[0], base+(o.sill+o.head)/2, -at[1]); m.rotation.y=-ang; m.userData.lvl=o.level; root.add(m); } };
+    m.position.set(at[0], (topA+botA)/2, -at[1]); m.rotation.y=-ang; m.userData.lvl=o.level; root.add(m); } };
   drawOpen(h.openings,null); drawOpen(h.fittings,0xc07a2b);
   if(h.roof&&h.roof.outlines){ for(const o of h.roof.outlines){ if(o.type!=='gable'||!o.ridge)continue; const pts=(o.boundary||[]).map(p=>rp(p,g)); if(!pts.length)continue;
     const xs=pts.map(p=>p[0]),ys=pts.map(p=>p[1]); const ov=o.overhang||0; const x0=Math.min(...xs)-ov,x1=Math.max(...xs)+ov,y0=Math.min(...ys)-ov,y1=Math.max(...ys)+ov;
