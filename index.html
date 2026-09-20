@@ -65,9 +65,11 @@
   <b>間取り</b>
   <span class="lv on" data-lv="1F">1F</span>
   <span class="lv" data-lv="2F">2F</span>
-  <span class="lv" id="btn3d" style="margin-left:auto;background:#2f6db0">3D ▶</span>
+  <span class="lv" id="btnplan" style="margin-left:auto">平面図</span>
+  <span class="lv" id="btn3d" style="background:#2f6db0">3D ▶</span>
   <span id="stat"></span>
 </div>
+<button id="planpng" style="display:none;position:fixed;top:44px;right:10px;z-index:6;background:#333;color:#fff;border:none;padding:8px 12px;border-radius:8px;font-size:13px">PNG保存</button>
 <div id="bar">
   <button class="btn on" data-tool="select">選択</button>
   <button class="btn" data-tool="wall_outer">外壁</button>
@@ -139,6 +141,7 @@ let view={s:0.06,px:0,py:0};
 let cur={lv:"1F",tool:"select",p1:null,floorPts:null,sel:null,axis:null};
 let uid=0;
 const LOFF=30;   // 通り芯番号を根本から延長する画面px量（外壁と誤タップしないため）
+let planView=false;   // 平面図（白黒・作図）表示モード
 
 const NX=()=>S.gx.length, NY=()=>S.gy.length;
 const WX=()=>S.gx[S.gx.length-1], WY=()=>S.gy[S.gy.length-1];
@@ -163,6 +166,7 @@ function fit(){ const m=64; const sw=(innerWidth-2*m)/(WX()||1), sh=(innerHeight
   view.s=Math.min(sw,sh); view.px=m+(innerWidth-2*m-WX()*view.s)/2; view.py=innerHeight-80-(innerHeight-140-WY()*view.s)/2; }
 
 function draw(){
+  if(planView){ drawPlan(); return; }
   ctx.clearRect(0,0,innerWidth,innerHeight);
   // grid + labels
   ctx.lineWidth=1; ctx.font="11px sans-serif"; ctx.textAlign="center"; ctx.textBaseline="middle";
@@ -207,6 +211,47 @@ function draw(){
   document.getElementById('stat').textContent=`壁${S.walls.length} 開${S.openings.length} 建具${S.fittings.length} 床${S.floors.length} 室${S.rooms.length}`;
 }
 
+// ---- 平面図（白黒・作図）----
+function _u(A,B){ const dx=B[0]-A[0],dy=B[1]-A[1]; const L=Math.hypot(dx,dy)||1; return [dx/L,dy/L]; }
+function wallFootprint(A,B,t){ const [ux,uy]=_u(A,B); const px=-uy,py=ux,e=t/2,h=t/2;
+  return [[A[0]-ux*e+px*h,A[1]-uy*e+py*h],[A[0]-ux*e-px*h,A[1]-uy*e-py*h],[B[0]+ux*e-px*h,B[1]+uy*e-py*h],[B[0]+ux*e+px*h,B[1]+uy*e+py*h]]; }
+function fillPolyW(poly,style){ ctx.fillStyle=style; ctx.beginPath(); poly.forEach((p,i)=>{i?ctx.lineTo(sx(p[0]),sy(p[1])):ctx.moveTo(sx(p[0]),sy(p[1]));}); ctx.closePath(); ctx.fill(); }
+function lineW(a,b,style,w){ ctx.strokeStyle=style;ctx.lineWidth=w||1;ctx.beginPath();ctx.moveTo(sx(a[0]),sy(a[1]));ctx.lineTo(sx(b[0]),sy(b[1]));ctx.stroke(); }
+function lineS(x1,y1,x2,y2){ ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.stroke(); }
+function drawFitting(o,cat){ const w=S.walls.find(x=>x.id===o.host); if(!w)return; const A=PW(w.a.i,w.a.j),B=PW(w.b.i,w.b.j);
+  const [ux,uy]=_u(A,B); const px=-uy,py=ux; const t=w.thickness||(w.kind==='outer'?150:105); const C=PW(o.at.i,o.at.j); const hw=(o.width||900)/2;
+  const P=(s,d)=>[C[0]+ux*s+px*d, C[1]+uy*s+py*d];
+  fillPolyW([P(-hw,t/2+3),P(-hw,-t/2-3),P(hw,-t/2-3),P(hw,t/2+3)],'#fff');   // 壁を開口で抜く
+  lineW(P(-hw,t/2),P(-hw,-t/2),'#111',1.6); lineW(P(hw,t/2),P(hw,-t/2),'#111',1.6);  // 方立(ジャム)
+  if(cat==='window'){ lineW(P(-hw,t/6),P(hw,t/6),'#111',1); lineW(P(-hw,-t/6),P(hw,-t/6),'#111',1); lineW(P(-hw,0),P(hw,0),'#111',1); }
+  else if(cat==='hinge'){ const hinge=P(-hw,0); const openPt=P(-hw,2*hw);
+    lineW(hinge,openPt,'#111',1.6); const cX=sx(hinge[0]),cY=sy(hinge[1]); const oX=sx(openPt[0]),oY=sy(openPt[1]); const dE=P(hw,0); const eX=sx(dE[0]),eY=sy(dE[1]);
+    const r=Math.hypot(oX-cX,oY-cY); const a0=Math.atan2(oY-cY,oX-cX),a1=Math.atan2(eY-cY,eX-cX);
+    ctx.strokeStyle='#111';ctx.lineWidth=1;ctx.beginPath();ctx.arc(cX,cY,r,Math.min(a0,a1),Math.max(a0,a1));ctx.stroke(); }
+  else { lineW(P(-hw,t/5),P(hw*0.08,t/5),'#111',2.2); lineW(P(-hw*0.08,-t/5),P(hw,-t/5),'#111',2.2); }  // 引戸(2枚)
+}
+function drawPlan(){
+  ctx.setTransform(devicePixelRatio,0,0,devicePixelRatio,0,0);
+  ctx.fillStyle='#fff'; ctx.fillRect(0,0,innerWidth,innerHeight);
+  const lv=cur.lv, gy0=S.gy[0], gx0=S.gx[0];
+  for(let i=0;i<NX();i++) lineW([S.gx[i],gy0],[S.gx[i],WY()],'#e3e3e3',1);
+  for(let j=0;j<NY();j++) lineW([gx0,S.gy[j]],[WX(),S.gy[j]],'#e3e3e3',1);
+  ctx.font='11px sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';
+  for(let i=0;i<NX();i++){ const X=sx(S.gx[i]),Y=sy(gy0)+LOFF+4; ctx.strokeStyle='#333';ctx.lineWidth=1; lineS(X,sy(gy0),X,Y-11);
+    ctx.beginPath();ctx.arc(X,Y,11,0,7);ctx.fillStyle='#fff';ctx.fill();ctx.stroke();ctx.fillStyle='#111';ctx.fillText('X'+(i+1),X,Y); }
+  for(let j=0;j<NY();j++){ const X=sx(gx0)-LOFF-4,Y=sy(S.gy[j]); ctx.strokeStyle='#333';ctx.lineWidth=1; lineS(sx(gx0),Y,X+11,Y);
+    ctx.beginPath();ctx.arc(X,Y,11,0,7);ctx.fillStyle='#fff';ctx.fill();ctx.stroke();ctx.fillStyle='#111';ctx.fillText('Y'+(j+1),X,Y); }
+  for(const w of S.walls){ if(w.level!==lv)continue; const A=PW(w.a.i,w.a.j),B=PW(w.b.i,w.b.j); if(A[0]===B[0]&&A[1]===B[1])continue;
+    fillPolyW(wallFootprint(A,B,w.thickness||(w.kind==='outer'?150:105)),'#111'); }
+  const items=[...S.openings.filter(o=>o.level===lv).map(o=>({o,cat:o.type==='door'?'hinge':'window'})),
+               ...S.fittings.filter(o=>o.level===lv).map(o=>({o,cat:(o.type==='開き戸')?'hinge':'slide'}))];
+  for(const it of items) drawFitting(it.o,it.cat);
+  ctx.fillStyle='#111'; ctx.textAlign='center'; ctx.font='13px sans-serif';
+  for(const r of S.rooms){ if(r.level!==lv)continue; let cx=0,cy=0; r.pts.forEach(p=>{const q=PW(p.i,p.j);cx+=q[0];cy+=q[1];}); cx/=r.pts.length;cy/=r.pts.length; ctx.fillText(r.name||'室',sx(cx),sy(cy)); }
+  ctx.fillStyle='#111';ctx.textAlign='left';ctx.font='15px sans-serif'; ctx.fillText(lv+' 平面図',14,innerHeight-72);
+  document.getElementById('stat').textContent='平面図 '+lv;
+}
+
 // ---- input ----
 let ptrs=new Map(), moved=false, downXY=null, pinch=null, dragAxis=false;
 cv.addEventListener('pointerdown',e=>{ cv.setPointerCapture(e.pointerId); ptrs.set(e.pointerId,{x:e.clientX,y:e.clientY});
@@ -231,6 +276,7 @@ function moveAxisTo(ax,px,py){ if(ax.a==='x'){ let v=Math.round(wx(px)/5)*5; v=c
 function clampAxis(arr,i,v){ const lo=i>0?arr[i-1]+100:-1e9, hi=i<arr.length-1?arr[i+1]-100:1e9; return Math.max(lo,Math.min(hi,v)); }
 
 function tap(px,py){
+  if(planView) return;   // 平面図モードは閲覧のみ
   if(cur.tool==='select'){
     // axis label?
     if(inXgutter(py)){ selectAxis('x', nidx(S.gx,wx(px))); return; }
@@ -352,6 +398,9 @@ document.querySelectorAll('[data-tool]').forEach(b=>b.onclick=()=>{ document.que
 document.getElementById('undo').onclick=()=>{ if(cur.floorPts&&cur.floorPts.length){cur.floorPts.pop();draw();return;} if(cur.p1){cur.p1=null;draw();return;}
   if(cur.tool==='room'&&S.rooms.length){S.rooms.pop();} else if(cur.tool==='fitting'&&S.fittings.length){S.fittings.pop();}
   else if(cur.tool==='opening'&&S.openings.length){S.openings.pop();} else if(S.openings.length){S.openings.pop();} else if(S.walls.length){S.walls.pop();} draw(); };
+document.getElementById('btnplan').onclick=()=>{ planView=!planView; const b=document.getElementById('btnplan'); b.textContent=planView?'編集':'平面図'; b.classList.toggle('on',planView);
+  document.getElementById('planpng').style.display=planView?'block':'none'; clearSel(); closeAxis(); draw(); };
+document.getElementById('planpng').onclick=()=>{ const a=document.createElement('a'); a.href=cv.toDataURL('image/png'); a.download=cur.lv+'_plan.png'; a.click(); };
 document.getElementById('menu').onclick=()=>{ syncPanelFrom(); document.getElementById('panel').classList.add('open'); };
 document.getElementById('close').onclick=()=>{ syncPanelTo(); document.getElementById('panel').classList.remove('open'); draw(); };
 document.getElementById('g_apply').onclick=()=>{ S.pitch=+val('g_pitch'); S.gx=uniform(+val('g_x'),S.pitch); S.gy=uniform(+val('g_y'),S.pitch); fit(); draw(); };
@@ -458,6 +507,7 @@ const EXAMPLE={ schema:"wood-house/0.2",units:"mm",grid:{pitch:910,x_axes:14,y_a
 
 window.getHouse=()=>buildHouse();
 loadHouse(EXAMPLE);   // 初期表示はサンプル住宅（全消去で空にできる）
+if(location.hash.indexOf('plan')>=0){ planView=true; const b=document.getElementById('btnplan'); b.textContent='編集'; b.classList.add('on'); document.getElementById('planpng').style.display='block'; }
 resize(); fit(); draw();
 </script>
 
