@@ -541,8 +541,10 @@ function roofZAt(h,x,y){ let best=null; if(h.roof&&h.roof.outlines){ for(const o
   if(x<x0-2||x>x1+2||y<y0-2||y>y1+2)continue;
   const ri=parseFloat(o.ridge.axis.slice(1))-1; const rx=axPos(h.grid.x_positions,ri,h.grid.pitch); const t=Math.tan((o.pitch_deg||20)*Math.PI/180);
   const z=x<=rx?o.ridge.z-t*(rx-x):o.ridge.z-t*(x-rx); best=best===null?z:Math.min(best,z); } } return best; }
-function wallMesh(a,b,z0,z1,th,color,isTop,h){ const dx=b[0]-a[0],dy=b[1]-a[1]; const len=Math.hypot(dx,dy); if(len<1)return null; const ux=dx/len,uy=dy/len;
-  const topAt=s=>{ const x=a[0]+ux*s,y=a[1]+uy*s; const rz=roofZAt(h,x,y); let tv; if(rz==null)tv=z1; else if(isTop)tv=rz; else tv=Math.min(z1,rz); return Math.max(z0+20,tv); };
+function wallMesh(a,b,z0,z1,th,color,isTop,h){ const dx=b[0]-a[0],dy=b[1]-a[1]; const len=Math.hypot(dx,dy); if(len<1)return null; const ux=dx/len,uy=dy/len; const nx=-uy,ny=ux;
+  const topAt=s=>{ const bx=a[0]+ux*s,by=a[1]+uy*s; let best=null;   // 板厚方向にも屋根高を取り最小＝屋根が必ず壁を覆う
+    for(const d of [-th/2,0,th/2]){ const rz=roofZAt(h,bx+nx*d,by+ny*d); const tv=(rz==null)?z1:(isTop?rz:Math.min(z1,rz)); best=(best==null)?tv:Math.min(best,tv); }
+    return Math.max(z0+20,best); };
   // 屋根面と厳密一致させるため、棟(ridge)を横切る位置を折れ点に（面は区間内で線形＝完全一致）
   const bps=[0,len];
   if(h.roof&&h.roof.outlines){ for(const o of h.roof.outlines){ if(o.type!=='gable'||!o.ridge)continue;
