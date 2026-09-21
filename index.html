@@ -223,7 +223,8 @@ function drawFitting(o,cat){ const w=S.walls.find(x=>x.id===o.host); if(!w)retur
   const P=(s,d)=>[C[0]+ux*s+px*d, C[1]+uy*s+py*d];
   fillPolyW([P(-hw,t/2+3),P(-hw,-t/2-3),P(hw,-t/2-3),P(hw,t/2+3)],'#fff');   // 壁を開口で抜く
   lineW(P(-hw,t/2),P(-hw,-t/2),'#111',1.6); lineW(P(hw,t/2),P(hw,-t/2),'#111',1.6);  // 方立(ジャム)
-  if(cat==='window'){ lineW(P(-hw,t/6),P(hw,t/6),'#111',1); lineW(P(-hw,-t/6),P(hw,-t/6),'#111',1); lineW(P(-hw,0),P(hw,0),'#111',1); }
+  if(cat==='window'){ // 壁面ライン2本（壁が枠として続く）＋中央ガラス線
+    lineW(P(-hw,t/2),P(hw,t/2),'#111',1.3); lineW(P(-hw,-t/2),P(hw,-t/2),'#111',1.3); lineW(P(-hw,0),P(hw,0),'#111',1.3); }
   else if(cat==='hinge'){ const hinge=P(-hw,0); const openPt=P(-hw,2*hw); const dE=P(hw,0);
     lineW(hinge,openPt,'#111',1.6);   // 開いた扉の葉
     const cX=sx(hinge[0]),cY=sy(hinge[1]); const oX=sx(openPt[0]),oY=sy(openPt[1]); const eX=sx(dE[0]),eY=sy(dE[1]);
@@ -511,6 +512,7 @@ window.getHouse=()=>buildHouse();
 loadHouse(EXAMPLE);   // 初期表示はサンプル住宅（全消去で空にできる）
 if(location.hash.indexOf('plan')>=0){ planView=true; const b=document.getElementById('btnplan'); b.textContent='編集'; b.classList.add('on'); document.getElementById('planpng').style.display='block'; }
 resize(); fit(); draw();
+if(location.hash.indexOf('3d')>=0){ setTimeout(()=>document.getElementById('btn3d').click(), 300); }
 </script>
 
 <script type="module">
@@ -566,7 +568,10 @@ function build(){ if(!inited)return; clearRoot(); const h=window.getHouse(); con
   const drawOpen=(arr,col)=>{ for(const o of (arr||[])){ const w=(h.walls||[]).find(x=>x.id===o.host); if(!w)continue; const a=rp(w.from,g),b=rp(w.to,g); const ang=Math.atan2(b[1]-a[1],b[0]-a[0]); const at=rp(o.at,g);
     const base=(w.base&&h.datums)?zOf(h,w.base,w.h0):((lv[o.level]||{fl:0}).fl);
     let botA=base+(o.sill||0), topA=base+(o.head||2000);
-    if(w.level===topLevel){ const rz=roofZAt(h,at[0],at[1]); if(rz!=null&&rz<topA) topA=Math.max(botA+50,rz); }  // 開口も屋根で切断
+    // 開口も屋根で切断（妻側含む）: 開口幅全体で屋根高の最小を取り、それより上をカット
+    const _dx=b[0]-a[0],_dy=b[1]-a[1],_wl=Math.hypot(_dx,_dy)||1,_ux=_dx/_wl,_uy=_dy/_wl,_wd=o.width||1200;
+    let _rz=Infinity; for(const f of [-0.5,-0.25,0,0.25,0.5]){ const r=roofZAt(h,at[0]+_ux*_wd*f,at[1]+_uy*_wd*f); if(r!=null)_rz=Math.min(_rz,r); }
+    if(isFinite(_rz)&&_rz<topA) topA=Math.max(botA+50,_rz);
     const H=Math.max(50,topA-botA), wd=o.width||1200, th=(w.thickness||150)+50;
     const c = col!=null?col:(o.type==='door'?0x8a6b45:0x8fc3e6);
     const m=new THREE.Mesh(new THREE.BoxGeometry(wd,H,th),new THREE.MeshLambertMaterial({color:c,transparent:true,opacity:.8}));
