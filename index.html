@@ -4,72 +4,104 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 <title>間取りエディタ — 木造在来ハウスジェネレータ</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+JP:wght@300;400;500&family=Zen+Old+Mincho:wght@500&display=swap" rel="stylesheet">
 <script type="importmap">{"imports":{"three":"https://unpkg.com/three@0.160.0/build/three.module.js"}}</script>
 <style>
-  :root{ --bg:#8f979e; --ink:#1a1a1a; --panel:#f5f4f1; --accent:#2f6db0; }
+  /* cotomos VI v1.0 — 月白の地・藍墨の文字・藍鼠の構造線・秋桜は選択の1点だけ */
+  :root{ --moon:#F7F9F8; --ink:#262D35; --sub:#5C6873; --nezu:#93A3AC; --rule:#D6DDDF; --kosumo:#A4587F;
+    --sans:"IBM Plex Sans JP","Hiragino Sans","Yu Gothic UI",sans-serif;
+    --mono:"IBM Plex Mono",ui-monospace,Consolas,monospace;
+    --mincho:"Zen Old Mincho","Yu Mincho","Hiragino Mincho ProN",serif; }
   *{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
-  html,body{ margin:0; height:100%; overflow:hidden; font-family:-apple-system,"Hiragino Kaku Gothic ProN",sans-serif; color:var(--ink); }
-  #cv{ position:fixed; inset:0; touch-action:none; background:var(--bg); display:block; }
-  #top{ position:fixed; top:0; left:0; right:0; padding:6px 10px; font-size:12px; color:#fff;
-        background:rgba(0,0,0,.45); display:flex; gap:8px; align-items:center; z-index:5; }
-  #top b{ font-weight:600; }
-  .lv{ padding:3px 9px; border-radius:12px; background:#fff3; }
-  .lv.on{ background:var(--accent); }
-  #bar{ position:fixed; bottom:0; left:0; right:0; z-index:5; display:flex; flex-wrap:nowrap;
-        gap:4px; padding:6px 5px; background:rgba(20,20,20,.82); }
-  .btn{ flex:1 1 0; min-width:0; text-align:center; padding:11px 2px; border-radius:7px;
-        background:#3a3a3a; color:#eee; font-size:12px; border:none; white-space:nowrap; }
-  .btn.on{ background:var(--accent); color:#fff; }
-  .btn.act{ background:#5a5a5a; }
-  .sheet{ position:fixed; left:0; right:0; bottom:58px; z-index:7; background:var(--panel);
-    border-radius:14px 14px 0 0; box-shadow:0 -4px 18px #0004; padding:12px 14px; transform:translateY(120%); transition:.18s; max-height:60vh; overflow:auto; }
-  .sheet.open{ transform:none; }
-  .sheet h4{ margin:2px 0 8px; font-size:14px; }
-  .sheet label{ display:flex; justify-content:space-between; align-items:center; font-size:13px; margin:6px 0; gap:8px; }
-  .sheet input,.sheet select{ width:140px; padding:6px; font-size:13px; }
-  .sheet .del{ background:#b23; color:#fff; border:none; padding:9px 14px; border-radius:8px; }
-  .sheet .ok{ background:var(--accent); color:#fff; border:none; padding:9px 14px; border-radius:8px; }
-  .sheet .rowb{ display:flex; gap:8px; justify-content:flex-end; margin-top:8px; }
-  #axisbox{ position:fixed; left:50%; transform:translateX(-50%); bottom:64px; z-index:7; display:none;
-    background:#222d; color:#fff; border-radius:10px; padding:8px 10px; font-size:13px; align-items:center; gap:6px; }
-  #axisbox.open{ display:flex; }
-  #axisbox button{ background:#444; color:#fff; border:none; border-radius:6px; padding:6px 9px; font-size:14px; }
-  #axisbox .nm{ font-weight:700; margin-right:4px; }
-  #panel{ position:fixed; top:0; right:0; bottom:0; width:min(86vw,360px); background:var(--panel);
-          z-index:10; transform:translateX(100%); transition:.2s; padding:14px; overflow:auto; }
-  #panel.open{ transform:none; box-shadow:-4px 0 20px #0005; }
-  #panel h3{ margin:12px 0 6px; font-size:14px; }
-  #panel label{ display:flex; justify-content:space-between; align-items:center; font-size:13px; margin:5px 0; gap:8px;}
-  #panel input,#panel select,#panel textarea{ width:150px; padding:5px; font-size:12px; }
-  #panel textarea{ width:100%; height:70px; font-family:monospace; }
-  #panel .json{ height:150px; }
-  .row{ display:flex; gap:6px; }
-  .row .btn{ background:#ddd; color:#222; }
-  .x{ position:absolute; top:8px; right:12px; font-size:22px; }
-  .hint{ font-size:11px; color:#555; margin:4px 0 10px; }
-  #three{ position:fixed; inset:0; z-index:8; display:none; background:#aeb4ba; }
+  [hidden]{ display:none!important; }
+  html,body{ margin:0; height:100%; overflow:hidden; font-family:var(--sans); font-weight:400; color:var(--ink); background:var(--moon); }
+  button{ font-family:inherit; }
+  #cv{ position:fixed; inset:0; touch-action:none; background:var(--moon); display:block; }
+
+  #top{ position:fixed; top:0; left:0; right:0; height:46px; padding:0 14px; display:flex; gap:2px; align-items:center;
+        z-index:5; background:var(--moon); border-bottom:1px solid var(--rule); font-size:12px; overflow-x:auto; }
+  .ttl{ font-family:var(--mincho); font-weight:500; font-size:16px; letter-spacing:.08em; margin-right:16px; white-space:nowrap; }
+  .tb{ background:none; border:none; color:var(--ink); font-size:12px; padding:6px 10px; border-radius:2px; cursor:pointer; white-space:nowrap; }
+  .tb.on{ background:var(--ink); color:var(--moon); }
+  .sep{ flex:0 0 1px; height:18px; background:var(--rule); margin:0 8px; }
+  #stat{ margin-left:auto; padding-left:12px; font-family:var(--mono); font-size:11px; color:var(--sub); white-space:nowrap; }
+
+  #bar{ position:fixed; bottom:0; left:0; right:0; z-index:5; display:flex; gap:2px; padding:8px 10px;
+        background:var(--moon); border-top:1px solid var(--rule); }
+  .btn{ flex:1 1 0; min-width:0; text-align:center; padding:10px 2px; border-radius:2px; background:none; color:var(--ink);
+        font-size:13px; border:none; white-space:nowrap; cursor:pointer; }
+  .btn.on{ background:var(--ink); color:var(--moon); }
+  .btn.act{ color:var(--sub); }
+  body:not([data-mode="edit"]) .btn[data-tool]{ display:none; }
+
+  #toast{ position:fixed; top:56px; left:50%; transform:translateX(-50%); z-index:6; font-size:12px; color:var(--sub);
+          background:var(--moon); padding:3px 10px; pointer-events:none; white-space:nowrap; max-width:92vw; overflow:hidden; text-overflow:ellipsis; }
+  #toast:empty{ display:none; }
+  #secbar{ position:fixed; top:54px; right:12px; z-index:6; display:flex; align-items:center; gap:2px; background:var(--moon); font-size:12px; }
+  #secbar .nm{ font-family:var(--mono); padding:0 8px; }
+
+  /* 左サイドパネル（選択要素の編集） */
+  #side{ position:fixed; left:0; top:46px; bottom:59px; width:min(86vw,300px); z-index:7; background:var(--moon);
+         border-right:1px solid var(--rule); transform:translateX(-105%); transition:transform .18s; overflow:auto; padding:20px 20px 28px; }
+  #side.open{ transform:none; }
+  #side h4{ font-weight:500; font-size:16px; margin:0 0 2px; letter-spacing:.02em; }
+  #side .k{ font-size:11px; color:var(--sub); margin:0 0 14px; letter-spacing:.04em; }
+  .f{ display:flex; justify-content:space-between; align-items:baseline; gap:10px; padding:9px 0; border-bottom:1px solid var(--rule); font-size:13px; }
+  .f > span{ color:var(--sub); font-size:12px; }
+  .f input,.f select{ width:120px; border:none; border-bottom:1px solid transparent; background:transparent; font-family:var(--mono); font-size:13px;
+                      color:var(--ink); text-align:right; padding:2px 0; outline:none; border-radius:0; }
+  .f input[type=text]{ font-family:var(--sans); }
+  .f select{ font-family:var(--sans); text-align-last:right; }
+  .f input:focus{ border-bottom-color:var(--ink); }
+  .f .ro{ font-family:var(--mono); font-weight:400; }
+  .grp{ font-size:11px; color:var(--sub); margin:22px 0 2px; letter-spacing:.1em; }
+  .note{ font-size:11px; color:var(--sub); line-height:1.7; margin:10px 0 0; }
+  .acts{ display:flex; gap:18px; flex-wrap:wrap; margin-top:14px; }
+  .lnk{ background:none; border:none; font-size:12px; color:var(--ink); padding:6px 0; cursor:pointer;
+        text-decoration:underline; text-underline-offset:4px; text-decoration-color:var(--nezu); }
+  .lnk.del{ color:var(--sub); }
+
+  /* 右メニュー */
+  #panel{ position:fixed; top:46px; right:0; bottom:59px; width:min(86vw,340px); background:var(--moon); z-index:10;
+          transform:translateX(105%); transition:transform .2s; padding:8px 20px 28px; overflow:auto; border-left:1px solid var(--rule); }
+  #panel.open{ transform:none; }
+  #panel h3{ font-size:11px; font-weight:500; color:var(--sub); letter-spacing:.1em; margin:24px 0 2px; }
+  #panel textarea{ width:100%; height:84px; font-family:var(--mono); font-size:11px; border:none; border-bottom:1px solid var(--rule);
+                   background:transparent; color:var(--ink); resize:vertical; outline:none; padding:6px 0; }
+  #panel .json{ height:170px; }
+  .row{ display:flex; gap:18px; flex-wrap:wrap; margin:6px 0; }
+  .hint{ font-size:11px; color:var(--sub); margin:6px 0 8px; line-height:1.7; }
+
+  /* 3D */
+  #three{ position:fixed; inset:0; z-index:8; display:none; background:var(--moon); }
   #three.on{ display:block; }
-  #three .x3{ position:fixed; top:10px; right:14px; z-index:9; font-size:22px; color:#111; background:#fff9; border-radius:18px; width:38px; height:38px; text-align:center; line-height:38px; }
-  #three .u3{ position:fixed; top:12px; left:14px; z-index:9; background:var(--accent); color:#fff; border:none; padding:9px 14px; border-radius:8px; font-size:13px; }
-  #three .tag{ position:fixed; bottom:14px; left:0; right:0; text-align:center; color:#333; font-size:12px; }
-  #three .modes{ position:fixed; top:12px; left:50%; transform:translateX(-50%); z-index:9; display:flex; gap:4px; }
-  #three .modes button{ background:#3a3a3acc; color:#eee; border:none; padding:8px 12px; border-radius:8px; font-size:13px; }
-  #three .modes button.on{ background:var(--accent); color:#fff; }
-  #three .vfl{ top:52px; }
-  .dlab{ position:fixed; z-index:9; font-size:11px; color:#123; background:#fffb; padding:1px 5px; border-radius:4px; transform:translateY(-50%); white-space:nowrap; pointer-events:none; display:none; }
+  #three .bar3{ position:fixed; top:0; left:0; right:0; height:46px; display:flex; align-items:center; gap:2px; padding:0 14px;
+                background:var(--moon); border-bottom:1px solid var(--rule); z-index:9; font-size:12px; overflow-x:auto; }
+  #three .tag{ position:fixed; bottom:14px; left:0; right:0; text-align:center; color:var(--sub); font-size:11px; }
+  .dlab{ position:fixed; z-index:9; font-family:var(--mono); font-size:11px; color:var(--ink); background:var(--moon); padding:0 4px;
+         transform:translateY(-50%); white-space:nowrap; pointer-events:none; display:none; }
 </style>
 </head>
-<body>
+<body data-mode="edit">
 <canvas id="cv"></canvas>
 <div id="top">
-  <b>間取り</b>
-  <span class="lv on" data-lv="1F">1F</span>
-  <span class="lv" data-lv="2F">2F</span>
-  <span class="lv" id="btnplan" style="margin-left:auto">平面図</span>
-  <span class="lv" id="btn3d" style="background:#2f6db0">3D ▶</span>
+  <span class="ttl" id="ttl">間取り</span>
+  <span id="lvs" style="display:flex;gap:2px"></span>
+  <span class="sep"></span>
+  <button class="tb on" data-v="edit">編集</button>
+  <button class="tb" data-v="plan">平面図</button>
+  <button class="tb" data-v="secX">X断面</button>
+  <button class="tb" data-v="secY">Y断面</button>
+  <button class="tb" id="planpng" hidden>PNG保存</button>
+  <span class="sep"></span>
+  <button class="tb" id="btn3d">3D</button>
   <span id="stat"></span>
 </div>
-<button id="planpng" style="display:none;position:fixed;top:44px;right:10px;z-index:6;background:#333;color:#fff;border:none;padding:8px 12px;border-radius:8px;font-size:13px">PNG保存</button>
+<div id="toast"></div>
+<div id="secbar" hidden><button class="tb" id="sec_prev">◀</button><span class="nm" id="sec_nm"></span><button class="tb" id="sec_next">▶</button></div>
+
 <div id="bar">
   <button class="btn on" data-tool="select">選択</button>
   <button class="btn" data-tool="wall_outer">外壁</button>
@@ -82,378 +114,614 @@
   <button class="btn act" id="menu">≡</button>
 </div>
 
-<div id="axisbox">
-  <span class="nm" id="ax_nm">X1</span>
-  <button data-d="-455">−455</button><button data-d="-91">−91</button>
-  <span id="ax_pos">0</span>
-  <button data-d="91">+91</button><button data-d="455">+455</button>
-  <button id="ax_close">✓</button>
-</div>
-
-<div class="sheet" id="sheet"></div>
+<aside id="side"></aside>
 
 <div id="three">
-  <div class="x3" id="c3d">×</div>
-  <button class="u3" id="u3d">↻ 更新</button>
-  <div class="modes" id="modes"><button data-m="3d" class="on">3D</button><button data-m="elevX">X立面</button><button data-m="elevY">Y立面</button></div>
-  <div class="modes vfl" id="vfloors"><button data-f="all" class="on">全体</button><button data-f="le2">〜2F</button><button data-f="1F">1F</button></div>
+  <div class="bar3">
+    <span class="ttl">3D</span>
+    <button class="tb" id="u3d">更新</button>
+    <span class="sep"></span>
+    <span id="modes" style="display:flex;gap:2px"><button class="tb on" data-m="3d">3D</button><button class="tb" data-m="elevX">X立面</button><button class="tb" data-m="elevY">Y立面</button></span>
+    <span class="sep"></span>
+    <span id="vfloors" style="display:flex;gap:2px"><button class="tb on" data-f="all">全体</button><button class="tb" data-f="noroof">屋根なし</button><button class="tb" data-f="1F">1F</button></span>
+    <button class="tb" id="c3d" style="margin-left:auto">閉じる</button>
+  </div>
   <div class="tag">ドラッグ=回転 / ピンチ=ズーム / 2本指=移動</div>
 </div>
 
 <div id="panel">
-  <div class="x" id="close">×</div>
+  <div class="row" style="justify-content:flex-end"><button class="lnk" id="close">閉じる</button></div>
   <h3>グリッド（通り芯）</h3>
-  <label>初期ピッチ(mm)<input id="g_pitch" type="number" value="910"></label>
-  <label>X通り数<input id="g_x" type="number" value="14"></label>
-  <label>Y通り数<input id="g_y" type="number" value="11"></label>
-  <div class="row"><button class="btn" id="g_apply">等ピッチで再生成</button></div>
-  <div class="hint">通り芯番号をタップ→移動（−/＋ or ドラッグ）。要素は通り芯に追従。</div>
+  <label class="f"><span>初期ピッチ</span><input id="g_pitch" type="number" value="910"></label>
+  <label class="f"><span>X通り数</span><input id="g_x" type="number" value="14"></label>
+  <label class="f"><span>Y通り数</span><input id="g_y" type="number" value="11"></label>
+  <div class="row"><button class="lnk" id="g_apply">等ピッチで再生成（要素は消える）</button></div>
+  <div class="hint">通り芯の番号をタップ→左パネルで位置を変更（ドラッグも可）。要素は通り芯に追従。</div>
 
-  <h3>基準高さ datum(mm)</h3>
-  <textarea id="datums"></textarea>
-  <div class="hint">壁は下基準+H0〜上基準+H1で定義。ここは name:mm を1行ずつ。</div>
+  <h3>開口の控除（単線 − 控除 ＝ 実開口の既定値）</h3>
+  <label class="f"><span>窓 window</span><input id="d_window" type="number"></label>
+  <label class="f"><span>ドア door</span><input id="d_door" type="number"></label>
+  <label class="f"><span>建具 fitting</span><input id="d_fitting" type="number"></label>
+  <div class="hint">開口は通り芯の交点〜交点の単線（例 1820）で引き、実開口（例 1690）は単線の中点に振り分けで置く。</div>
 
-  <h3>屋根（母屋）</h3>
-  <label>種別<select id="r_type"><option value="gable">切妻</option><option value="none">なし</option></select></label>
-  <label>棟通り(X)<input id="r_ridge" type="number" value="7.5" step="0.5"></label>
-  <label>勾配(度)<input id="r_pitch" type="number" value="20"></label>
-  <label>棟高(mm)<input id="r_z" type="number" value="6960"></label>
-  <label>軒の出(mm)<input id="r_ov" type="number" value="600"></label>
-  <label>左右等勾配<input id="r_eq" type="checkbox" checked></label>
+  <h3>基準高さ datum</h3>
+  <textarea id="datums" spellcheck="false"></textarea>
+  <div class="hint">name:mm を1行ずつ。FL/CL はレベル側（断面で編集）。</div>
 
-  <h3>JSON (house.json)</h3>
-  <div class="row"><button class="btn" id="export">生成/更新</button><button class="btn" id="copy">コピー</button><button class="btn" id="dl">保存</button></div>
-  <div class="row" style="margin-top:6px"><button class="btn" id="import">取込</button><button class="btn" id="loadex">例</button><button class="btn" id="clear">全消去</button></div>
+  <h3>house.json（wood-house/0.3）</h3>
+  <div class="row"><button class="lnk" id="export">生成</button><button class="lnk" id="copy">コピー</button><button class="lnk" id="dl">保存</button>
+    <button class="lnk" id="import">取込</button><button class="lnk" id="loadex">例</button><button class="lnk del" id="clear">全消去</button></div>
   <textarea id="json" class="json" spellcheck="false"></textarea>
 </div>
 
 <script>
 "use strict";
 const cv=document.getElementById('cv'), ctx=cv.getContext('2d');
+const C={moon:'#F7F9F8',ink:'#262D35',sub:'#5C6873',nezu:'#93A3AC',rule:'#D6DDDF',kosumo:'#A4587F'};
+const FS='"IBM Plex Sans JP","Hiragino Sans","Yu Gothic UI",sans-serif', FM='"IBM Plex Mono",ui-monospace,Consolas,monospace';
+const font=(px,mono,w)=>`${w||400} ${px}px ${mono?FM:FS}`;
 const DEF_DATUMS={ "GL":0,"1FL":600,"1CL":2900,"2FL":3110,"2F梁天端":3100,"2CL":4930,"軒高":5340,"棟高":6960 };
-const S={ gx:[], gy:[], pitch:910, datums:Object.assign({},DEF_DATUMS),
-  walls:[], openings:[], floors:[], rooms:[], fittings:[],
-  roof:{type:"gable",ridge:7.5,pitch:20,z:6960,ov:600,eq:true} };
 const FITTYPES=["引戸","開き戸","片引戸","両引戸","襖","障子"];
+const OTYPE={window:'窓',door:'ドア',fitting:'建具'};
+const LOFF=30;   // 通り芯番号を根本から延長する画面px量
+const S={ gx:[], gy:[], glx:[], gly:[], pitch:910, datums:{}, levels:[], walls:[], openings:[], floors:[], rooms:[], roofs:[],
+  rules:{deduct:{window:130,door:40,fitting:0}}, base:null, title:'間取り' };
+let view={s:0.06,px:0,py:0}, planSaved=null;
+let cur={lv:'1F',tool:'select',p1:null,floorPts:null,sel:null,mode:'edit',cut:{secX:null,secY:null},handles:[]};
+const r1=v=>Math.round(v*10)/10;
 function uniform(n,p){ const a=[]; for(let i=0;i<n;i++)a.push(i*p); return a; }
-S.gx=uniform(14,910); S.gy=uniform(11,910);
-let view={s:0.06,px:0,py:0};
-let cur={lv:"1F",tool:"select",p1:null,floorPts:null,sel:null,axis:null};
-let uid=0;
-const LOFF=30;   // 通り芯番号を根本から延長する画面px量（外壁と誤タップしないため）
-let planView=false;   // 平面図（白黒・作図）表示モード
 
+// ---------- 座標 ----------
 const NX=()=>S.gx.length, NY=()=>S.gy.length;
-const WX=()=>S.gx[S.gx.length-1], WY=()=>S.gy[S.gy.length-1];
+const X0=()=>S.gx[0]||0, X1=()=>S.gx[NX()-1]||0, Y0=()=>S.gy[0]||0, Y1=()=>S.gy[NY()-1]||0;
 function sx(x){return view.px+x*view.s;} function sy(y){return view.py-y*view.s;}
 function wx(p){return (p-view.px)/view.s;} function wy(p){return (view.py-p)/view.s;}
-function nidx(arr,v){ let bi=0,bd=1e9; for(let i=0;i<arr.length;i++){const d=Math.abs(arr[i]-v);if(d<bd){bd=d;bi=i;}} return bi; }
+function nidx(arr,v){ let bi=0,bd=1e18; for(let i=0;i<arr.length;i++){const d=Math.abs(arr[i]-v);if(d<bd){bd=d;bi=i;}} return bi; }
 function snap(px,py){ return {i:nidx(S.gx,wx(px)), j:nidx(S.gy,wy(py))}; }
-function PW(i,j){ return [S.gx[i], S.gy[j]]; }               // grid index -> world
-function tok(a,i){ return a+(i+1); }
-function idxTok(t){ return parseInt(t.slice(1),10)-1; }
-function openSeg(o){ const w=S.walls.find(w=>w.id===o.host); if(!w)return null;
-  const A=PW(w.a.i,w.a.j),B=PW(w.b.i,w.b.j); let dx=B[0]-A[0],dy=B[1]-A[1]; const L=Math.hypot(dx,dy)||1; dx/=L;dy/=L;
-  const P=PW(o.at.i,o.at.j); const hw=(o.width||1200)/2;
-  return {a:[P[0]-dx*hw,P[1]-dy*hw], b:[P[0]+dx*hw,P[1]+dy*hw]}; }
-function segDistW(px,py,A,B){ const x1=sx(A[0]),y1=sy(A[1]),x2=sx(B[0]),y2=sy(B[1]); const dx=x2-x1,dy=y2-y1,L=dx*dx+dy*dy;
-  let t=L?((px-x1)*dx+(py-y1)*dy)/L:0; t=Math.max(0,Math.min(1,t)); return Math.hypot(px-(x1+t*dx),py-(y1+t*dy)); }
+function P(p){ return [S.gx[p.i], S.gy[p.j]]; }
+function distSeg(p,A,B){ const dx=B[0]-A[0],dy=B[1]-A[1],L=dx*dx+dy*dy; let t=L?((p[0]-A[0])*dx+(p[1]-A[1])*dy)/L:0; t=Math.max(0,Math.min(1,t));
+  return Math.hypot(p[0]-(A[0]+t*dx),p[1]-(A[1]+t*dy)); }
+function segDistS(px,py,A,B){ return distSeg([px,py],[sx(A[0]),sy(A[1])],[sx(B[0]),sy(B[1])]); }
+function nid(pre,list){ let n=list.length+1; while(list.some(x=>x.id===pre+n)) n++; return pre+n; }
+const isSec=m=>m==='secX'||m==='secY';
 
+// ---------- 履歴 ----------
+const hist=[];
+function core(){ return {gx:S.gx,gy:S.gy,glx:S.glx,gly:S.gly,datums:S.datums,levels:S.levels,walls:S.walls,openings:S.openings,floors:S.floors,rooms:S.rooms,roofs:S.roofs,rules:S.rules}; }
+function mut(){ hist.push(JSON.stringify(core())); if(hist.length>100)hist.shift(); }
+function undo(){ if(cur.floorPts&&cur.floorPts.length){cur.floorPts.pop();draw();return;} if(cur.p1){cur.p1=null;draw();return;}
+  const s=hist.pop(); if(!s){ toast('これ以上戻せません',1500); return; } Object.assign(S,JSON.parse(s)); clearSel(); renderLevels(); draw(); }
+
+// ---------- 開口（単線 a→b ＋ 実開口幅 width を中点振り分け）----------
+function oLine(o){ return [P(o.a),P(o.b)]; }
+function oSeg(o){ const [A,B]=oLine(o); const L=Math.hypot(B[0]-A[0],B[1]-A[1]); const w=S.walls.find(x=>x.id===o.host);
+  let ux=1,uy=0; if(L>0){ux=(B[0]-A[0])/L;uy=(B[1]-A[1])/L;} else if(w){ const a=P(w.a),b=P(w.b),l=Math.hypot(b[0]-a[0],b[1]-a[1])||1; ux=(b[0]-a[0])/l; uy=(b[1]-a[1])/l; }
+  const M=[(A[0]+B[0])/2,(A[1]+B[1])/2]; const hw=(o.width||0)/2;
+  return {a:[M[0]-ux*hw,M[1]-uy*hw], b:[M[0]+ux*hw,M[1]+uy*hw], m:M, u:[ux,uy], span:L}; }
+function dedOf(t){ const d=(S.rules&&S.rules.deduct)||{}; return +(d[t]!=null?d[t]:0); }
+function defWidth(o){ return Math.max(0,Math.round(oSeg(o).span-dedOf(o.type))); }
+function onWall(p,w){ return distSeg(p,P(w.a),P(w.b))<=1; }
+function hostFor(a,b,lv){ const A=P(a),B=P(b); return S.walls.find(w=>w.level===lv&&onWall(A,w)&&onWall(B,w)); }
+function openingOK(o){ const w=S.walls.find(x=>x.id===o.host); if(!w)return false; const [A,B]=oLine(o); const sg=oSeg(o);
+  return onWall(A,w)&&onWall(B,w)&&sg.span>0&&o.width<=sg.span+0.5; }
+
+// ---------- 高さ ----------
+function lvOf(id){ return S.levels.find(l=>l.id===id)||{id,fl:0,cl:2400}; }
+function topLevelId(){ const ids=new Set(S.walls.map(w=>w.level)); const ls=S.levels.filter(l=>ids.has(l.id)).sort((p,q)=>p.fl-q.fl); return ls.length?ls[ls.length-1].id:null; }
+function wallZ(w){ const L=lvOf(w.level);
+  if(w.base&&S.datums[w.base]!=null) return [S.datums[w.base]+(+w.h0||0), (S.datums[w.top]!=null?S.datums[w.top]:L.cl)+(+w.h1||0)];
+  return [L.fl,L.cl]; }
+function wallTopAt(w,x,y,isTop){ const z1=wallZ(w)[1]; const r=RK.roofZ(S.roofs,x,y); if(r==null)return z1; return isTop?r:Math.min(z1,r); }
+
+// ---------- 屋根キット（v0.3: axis + eaves[{pos,z}] + ridge{pos,z}。3Dと断面で共用）----------
+const RK={
+  bb(o){ const b=o.boundary||[]; if(!b.length)return null; const xs=b.map(p=>+p[0]),ys=b.map(p=>+p[1]);
+    return {x0:Math.min(...xs),x1:Math.max(...xs),y0:Math.min(...ys),y1:Math.max(...ys)}; },
+  knots(o){ return [...(o.eaves||[]),...(o.ridge&&o.ridge.pos!=null?[o.ridge]:[])].map(k=>({pos:+k.pos,z:+k.z,ref:k})).sort((a,b)=>a.pos-b.pos); },
+  slopeAlong(o){ return o.axis==='x'?1:0; },   // 勾配が変化する座標（0=x, 1=y）。axis は棟の向き
+  zAt(o,x,y){ const k=RK.knots(o); if(!k.length)return null; if(k.length===1)return k[0].z; const t=RK.slopeAlong(o)?y:x;
+    let i=0; while(i<k.length-2&&t>k[i+1].pos)i++; const a=k[i],b=k[i+1],d=(b.pos-a.pos)||1; return a.z+(b.z-a.z)*(t-a.pos)/d; },
+  inBox(o,x,y,ov){ const b=RK.bb(o); if(!b)return false; return x>=b.x0-ov-0.5&&x<=b.x1+ov+0.5&&y>=b.y0-ov-0.5&&y<=b.y1+ov+0.5; },
+  pick(roofs,x,y){ let best=null,bz=-1e18;
+    for(const pass of [0,1]){ for(const o of roofs||[]){ if(!RK.inBox(o,x,y,pass?(+o.overhang||0):0))continue; const z=RK.zAt(o,x,y); if(z!=null&&z>bz){bz=z;best=o;} } if(best)return best; }
+    return null; },
+  roofZ(roofs,x,y){ const o=RK.pick(roofs,x,y); return o?RK.zAt(o,x,y):null; },
+  slopes(o){ const k=RK.knots(o),r=[]; for(let i=0;i<k.length-1;i++){ const run=Math.abs(k[i+1].pos-k[i].pos),rise=Math.abs(k[i+1].z-k[i].z),tn=run?rise/run:0;
+    r.push({deg:Math.atan(tn)*180/Math.PI,sun:tn*10}); } return r; },
+  breaks(roofs,A,B){ const L=Math.hypot(B[0]-A[0],B[1]-A[1]); if(L<1e-6)return [0]; const ux=(B[0]-A[0])/L,uy=(B[1]-A[1])/L,out=[0,L];
+    const add=(ax,v,eps)=>{ const u=ax?uy:ux; if(Math.abs(u)<1e-9)return; const s=(v-A[ax])/u; for(const e of eps){ const q=s+e; if(q>0&&q<L)out.push(q);} };
+    for(const o of roofs||[]){ const b=RK.bb(o); if(!b)continue; const ov=+o.overhang||0, J=[-0.5,0.5];
+      [b.x0,b.x1,b.x0-ov,b.x1+ov].forEach(v=>add(0,v,J)); [b.y0,b.y1,b.y0-ov,b.y1+ov].forEach(v=>add(1,v,J));
+      for(const k of RK.knots(o)) add(RK.slopeAlong(o),k.pos,[0]); }
+    return [...new Set(out.map(v=>Math.round(v*100)/100))].sort((a,b)=>a-b); }
+};
+window.RK=RK;
+
+// ---------- 画面 ----------
 function resize(){ cv.width=innerWidth*devicePixelRatio; cv.height=innerHeight*devicePixelRatio;
   cv.style.width=innerWidth+'px'; cv.style.height=innerHeight+'px'; ctx.setTransform(devicePixelRatio,0,0,devicePixelRatio,0,0); draw(); }
 addEventListener('resize',resize);
-function fit(){ const m=64; const sw=(innerWidth-2*m)/(WX()||1), sh=(innerHeight-2*m-130)/(WY()||1);
-  view.s=Math.min(sw,sh); view.px=m+(innerWidth-2*m-WX()*view.s)/2; view.py=innerHeight-80-(innerHeight-140-WY()*view.s)/2; }
+function fit(){ const m=56,top=64,bot=84; const W=(X1()-X0())||1, H=(Y1()-Y0())||1; const aw=innerWidth-2*m-LOFF, ah=innerHeight-top-bot-LOFF;
+  view.s=Math.min(aw/W,ah/H); view.px=m+LOFF+(aw-W*view.s)/2-X0()*view.s; view.py=innerHeight-bot-LOFF-(ah-H*view.s)/2+Y0()*view.s; }
+function lineS(x1,y1,x2,y2,col,w){ ctx.strokeStyle=col; ctx.lineWidth=w||1; ctx.beginPath(); ctx.moveTo(x1,y1); ctx.lineTo(x2,y2); ctx.stroke(); }
+function lineW(a,b,col,w){ lineS(sx(a[0]),sy(a[1]),sx(b[0]),sy(b[1]),col,w); }
+function fillPolyW(poly,style){ ctx.fillStyle=style; ctx.beginPath(); poly.forEach((p,i)=>{i?ctx.lineTo(sx(p[0]),sy(p[1])):ctx.moveTo(sx(p[0]),sy(p[1]));}); ctx.closePath(); ctx.fill(); }
+function txt(t,x,y,f,col,al,bl){ ctx.font=f; ctx.fillStyle=col; ctx.textAlign=al||'center'; ctx.textBaseline=bl||'middle'; ctx.fillText(t,x,y); }
+let toastT=null;
+function toast(t,ms){ const el=document.getElementById('toast'); el.textContent=t||''; clearTimeout(toastT); if(ms) toastT=setTimeout(toolHint,ms); }
+const isSel=o=>cur.sel&&cur.sel.o===o;
+const isSelAxis=(a,i)=>cur.sel&&cur.sel.type==='axis'&&cur.sel.a===a&&cur.sel.i===i;
+function wallOnLine(a,i){ return S.walls.some(w=>a==='x'?(w.a.i===i&&w.b.i===i):(w.a.j===i&&w.b.j===i)); }
+function gridOn(a,i){ return !S.walls.length||wallOnLine(a,i); }
+const drawingTool=()=>['wall_outer','wall_inner','opening','fitting','floor'].includes(cur.tool);
 
 function draw(){
-  if(planView){ drawPlan(); return; }
-  ctx.clearRect(0,0,innerWidth,innerHeight);
-  // grid + labels
-  ctx.lineWidth=1; ctx.font="11px sans-serif"; ctx.textAlign="center"; ctx.textBaseline="middle";
-  const gy0=S.gy[0], gx0=S.gx[0];
-  for(let i=0;i<NX();i++){ const x=S.gx[i]; const on=cur.axis&&cur.axis.a==='x'&&cur.axis.i===i;
-    ctx.strokeStyle=on?"#e33":"#cfcfcf"; ctx.lineWidth=on?2:1;
-    ctx.beginPath(); ctx.moveTo(sx(x),sy(gy0)); ctx.lineTo(sx(x),sy(WY())); ctx.stroke();
-    ctx.strokeStyle=on?"#e33":"#b0b0b0"; ctx.lineWidth=1;   // 根本延長スタブ
-    ctx.beginPath(); ctx.moveTo(sx(x),sy(gy0)); ctx.lineTo(sx(x),sy(gy0)+LOFF); ctx.stroke();
-    ctx.fillStyle=on?"#e33":"#5a5a5a"; ctx.fillText("X"+(i+1), sx(x), sy(gy0)+LOFF+8); }
-  for(let j=0;j<NY();j++){ const y=S.gy[j]; const on=cur.axis&&cur.axis.a==='y'&&cur.axis.i===j;
-    ctx.strokeStyle=on?"#e33":"#cfcfcf"; ctx.lineWidth=on?2:1;
-    ctx.beginPath(); ctx.moveTo(sx(gx0),sy(y)); ctx.lineTo(sx(WX()),sy(y)); ctx.stroke();
-    ctx.strokeStyle=on?"#e33":"#b0b0b0"; ctx.lineWidth=1;
-    ctx.beginPath(); ctx.moveTo(sx(gx0),sy(y)); ctx.lineTo(sx(gx0)-LOFF,sy(y)); ctx.stroke();
-    ctx.fillStyle=on?"#e33":"#5a5a5a"; ctx.fillText("Y"+(j+1), sx(gx0)-LOFF-11, sy(y)); }
-  // floors
-  for(const f of S.floors){ if(f.level!==cur.lv)continue; ctx.fillStyle="rgba(47,109,176,.08)";
-    ctx.beginPath(); f.pts.forEach((p,k)=>{const w=PW(p.i,p.j); k?ctx.lineTo(sx(w[0]),sy(w[1])):ctx.moveTo(sx(w[0]),sy(w[1]));}); ctx.closePath(); ctx.fill(); }
-  // rooms (name at centroid)
-  for(const r of S.rooms){ if(r.level!==cur.lv)continue; let cx=0,cy=0; r.pts.forEach(p=>{const w=PW(p.i,p.j);cx+=w[0];cy+=w[1];}); cx/=r.pts.length; cy/=r.pts.length;
-    ctx.fillStyle="#333"; ctx.font="13px sans-serif"; ctx.fillText(r.name||"室", sx(cx), sy(cy)); }
-  // walls
-  for(const w of S.walls){ const other=w.level!==cur.lv; const seld=cur.sel&&cur.sel.o===w;
-    ctx.lineWidth=(w.kind==="outer"?7:4)+(seld?3:0);
-    ctx.strokeStyle= seld?"#e33": other?"#9aa0a6":(w.kind==="outer"?"#111":"#3a6ea5");
-    ctx.setLineDash(other?[6,6]:[]); const a=PW(w.a.i,w.a.j),b=PW(w.b.i,w.b.j);
-    ctx.beginPath(); ctx.moveTo(sx(a[0]),sy(a[1])); ctx.lineTo(sx(b[0]),sy(b[1])); ctx.stroke(); }
+  if(cur.mode==='plan') return drawPlan();
+  if(isSec(cur.mode)) return drawSection();
+  ctx.fillStyle=C.moon; ctx.fillRect(0,0,innerWidth,innerHeight);
+  const faint=drawingTool(), lv=cur.lv;
+  // 通り芯（壁のある線だけ。作図ツール中は全線を薄く）
+  for(let i=0;i<NX();i++){ const on=gridOn('x',i); if(!on&&!faint)continue; const x=S.gx[i], sel=isSelAxis('x',i), lab=S.glx[i];
+    const col=sel?C.kosumo:C.rule; ctx.setLineDash(on?[]:[2,5]); lineS(sx(x),sy(Y0()),sx(x),sy(Y1()),col,sel?1.5:1); ctx.setLineDash([]);
+    lineS(sx(x),sy(Y0()),sx(x),sy(Y0())+LOFF,col,1);
+    txt(lab||Math.round(x),sx(x),sy(Y0())+LOFF+9,font(lab?11:9,true),sel?C.kosumo:(lab?C.sub:C.nezu)); }
+  for(let j=0;j<NY();j++){ const on=gridOn('y',j); if(!on&&!faint)continue; const y=S.gy[j], sel=isSelAxis('y',j), lab=S.gly[j];
+    const col=sel?C.kosumo:C.rule; ctx.setLineDash(on?[]:[2,5]); lineS(sx(X0()),sy(y),sx(X1()),sy(y),col,sel?1.5:1); ctx.setLineDash([]);
+    lineS(sx(X0()),sy(y),sx(X0())-LOFF,sy(y),col,1);
+    txt(lab||Math.round(y),sx(X0())-LOFF-4,sy(y),font(lab?11:9,true),sel?C.kosumo:(lab?C.sub:C.nezu),'right'); }
+  if(faint&&NX()*NY()<4000){ ctx.fillStyle=C.nezu; for(const x of S.gx)for(const y of S.gy){ ctx.fillRect(sx(x)-1,sy(y)-1,2,2); } }
+  // 断面位置
+  for(const m of ['secX','secY']){ const k=cur.cut[m]; if(k==null)continue; ctx.setLineDash([8,4,2,4]);
+    if(m==='secX'){ const y=S.gy[k]; if(y==null)continue; lineS(sx(X0())-6,sy(y),sx(X1())+16,sy(y),C.nezu,1); txt('X断面',sx(X1())+20,sy(y),font(10),C.nezu,'left'); }
+    else { const x=S.gx[k]; if(x==null)continue; lineS(sx(x),sy(Y1())-16,sx(x),sy(Y0())+6,C.nezu,1); txt('Y断面',sx(x),sy(Y1())-24,font(10),C.nezu); }
+    ctx.setLineDash([]); }
+  // 床・室
+  for(const f of S.floors){ if(f.level!==lv)continue; fillPolyW(f.pts.map(P),isSel(f)?'rgba(164,88,127,.10)':'rgba(147,163,172,.12)'); }
+  for(const r of S.rooms){ if(r.level!==lv)continue; const c=roomAt(r); if(!c)continue; txt(r.name||'室',sx(c[0]),sy(c[1]),font(12,false,isSel(r)?500:400),isSel(r)?C.kosumo:C.ink); }
+  // 壁
+  ctx.lineCap='butt';
+  for(const w of S.walls){ const other=w.level!==lv, sel=isSel(w);
+    ctx.setLineDash(other?[6,6]:[]); lineW(P(w.a),P(w.b), sel?C.kosumo:other?C.rule:(w.kind==='outer'?C.ink:C.nezu), (w.kind==='outer'?6:4)+(sel?2:0)); }
   ctx.setLineDash([]);
-  // openings（幅に応じた太線でホスト壁に沿って表示）
-  for(const o of S.openings){ if(o.level!==cur.lv)continue; const sg=openSeg(o); if(!sg)continue; const seld=cur.sel&&cur.sel.o===o;
-    ctx.strokeStyle= seld?"#e33":(o.type==="door"?"#0a7d2c":"#0aa"); ctx.lineWidth=seld?10:8; ctx.lineCap="round";
-    ctx.beginPath(); ctx.moveTo(sx(sg.a[0]),sy(sg.a[1])); ctx.lineTo(sx(sg.b[0]),sy(sg.b[1])); ctx.stroke(); ctx.lineCap="butt"; }
-  // 内部建具（幅に応じた太線・破線で表示）
-  for(const o of S.fittings){ if(o.level!==cur.lv)continue; const sg=openSeg(o); if(!sg)continue; const seld=cur.sel&&cur.sel.o===o;
-    ctx.strokeStyle= seld?"#e33":"#c07a2b"; ctx.lineWidth=seld?9:7; ctx.lineCap="round"; ctx.setLineDash([9,5]);
-    ctx.beginPath(); ctx.moveTo(sx(sg.a[0]),sy(sg.a[1])); ctx.lineTo(sx(sg.b[0]),sy(sg.b[1])); ctx.stroke(); ctx.setLineDash([]); ctx.lineCap="butt"; }
-  // in-progress
-  if(cur.p1){ const w=PW(cur.p1.i,cur.p1.j); ctx.fillStyle="#e33"; ctx.beginPath(); ctx.arc(sx(w[0]),sy(w[1]),7,0,7); ctx.fill(); }
-  if(cur.floorPts){ ctx.strokeStyle="#e33"; ctx.lineWidth=2; ctx.setLineDash([4,4]); ctx.beginPath();
-    cur.floorPts.forEach((p,k)=>{const w=PW(p.i,p.j); k?ctx.lineTo(sx(w[0]),sy(w[1])):ctx.moveTo(sx(w[0]),sy(w[1]));}); ctx.stroke(); ctx.setLineDash([]); }
-  document.getElementById('stat').textContent=`壁${S.walls.length} 開${S.openings.length} 建具${S.fittings.length} 床${S.floors.length} 室${S.rooms.length}`;
+  // 開口・建具
+  for(const o of S.openings){ if(o.level!==lv)continue; drawOpeningEdit(o); }
+  // 作図中
+  if(cur.p1){ const w=P(cur.p1); ctx.strokeStyle=C.ink; ctx.lineWidth=1.5; ctx.beginPath(); ctx.arc(sx(w[0]),sy(w[1]),7,0,7); ctx.stroke(); }
+  if(cur.floorPts){ ctx.setLineDash([4,4]); ctx.strokeStyle=C.ink; ctx.lineWidth=1.5; ctx.beginPath();
+    cur.floorPts.forEach((p,k)=>{const w=P(p); k?ctx.lineTo(sx(w[0]),sy(w[1])):ctx.moveTo(sx(w[0]),sy(w[1]));}); ctx.stroke(); ctx.setLineDash([]); }
+  drawReview();
+  document.getElementById('stat').textContent=`壁 ${S.walls.length}  開口 ${S.openings.length}  床 ${S.floors.length}  室 ${S.rooms.length}`;
 }
+function drawOpeningEdit(o){ const sg=oSeg(o), [A,B]=oLine(o), sel=isSel(o), ok=openingOK(o);
+  const host=S.walls.find(w=>w.id===o.host); const [ux,uy]=sg.u, nx=-uy, ny=ux;
+  const tick=(Q,col,len)=>{ const X=sx(Q[0]),Y=sy(Q[1]),tx=nx*len,ty=-ny*len; lineS(X-tx,Y-ty,X+tx,Y+ty,col,1); };
+  const col=sel?C.kosumo:C.nezu;
+  lineW(sg.a,sg.b,C.moon,host&&host.kind==='outer'?8:6);           // 実開口ぶん壁を抜く
+  if(o.type==='window'){ lineW(sg.a,sg.b,col,3); }
+  else if(o.type==='door'){ lineW(sg.a,sg.b,col,1); tick(sg.a,sel?C.kosumo:C.ink,6); tick(sg.b,sel?C.kosumo:C.ink,6); }
+  else { ctx.setLineDash([5,4]); lineW(sg.a,sg.b,col,2.5); ctx.setLineDash([]); }
+  // 単線（交点〜交点）: 両端の細い目盛り
+  const lc=sel?C.kosumo:(ok?C.sub:C.kosumo); tick(A,lc,10); tick(B,lc,10);
+  if(!ok){ ctx.setLineDash([2,3]); lineW(A,B,C.kosumo,1); ctx.setLineDash([]); }
+  if(sel||view.s>0.05){ const off=17/view.s, M=[sg.m[0]+nx*off,sg.m[1]+ny*off];
+    txt(`${Math.round(sg.span)} / ${o.width}`,sx(M[0]),sy(M[1]),font(10,true),sel?C.kosumo:C.sub); } }
+function roomAt(r){ if(r.pts&&r.pts.length){ let cx=0,cy=0; r.pts.forEach(p=>{const q=P(p);cx+=q[0];cy+=q[1];}); return [cx/r.pts.length,cy/r.pts.length]; } return r.at||null; }
 
-// ---- 平面図（白黒・作図）----
+// ---------- 確認レイヤー（#ov=<url>、R で切替）----------
+let REVIEW=null, reviewOn=true;
+function rvCat(o){ if(!o.host)return 'nohost'; if(o._review&&/^W\d/.test(o.id))return 'model'; if(o._v02_model_id)return 'match'; return 'drawing'; }
+const RV={match:C.ink,drawing:C.nezu,nohost:C.kosumo,model:C.kosumo};
+function drawReview(){ if(!REVIEW||!reviewOn)return; const walls=REVIEW.walls||[];
+  for(const o of REVIEW.openings||[]){ if((o.level||'1F')!==cur.lv)continue; let Cc,ux=1,uy=0;
+    if(o.from&&o.to){ Cc=[(o.from[0]+o.to[0])/2,(o.from[1]+o.to[1])/2]; const L=Math.hypot(o.to[0]-o.from[0],o.to[1]-o.from[1])||1; ux=(o.to[0]-o.from[0])/L; uy=(o.to[1]-o.from[1])/L; }
+    else if(o.at){ Cc=o.at; const w=walls.find(x=>x.id===o.host); if(w){ const L=Math.hypot(w.to[0]-w.from[0],w.to[1]-w.from[1])||1; ux=(w.to[0]-w.from[0])/L; uy=(w.to[1]-w.from[1])/L; } }
+    if(!Cc)continue; const hw=(o.width||900)/2, cat=rvCat(o);
+    ctx.setLineDash(cat==='nohost'||cat==='model'?[6,4]:[]); lineW([Cc[0]-ux*hw,Cc[1]-uy*hw],[Cc[0]+ux*hw,Cc[1]+uy*hw],RV[cat],1.5); ctx.setLineDash([]); } }
+addEventListener('keydown',e=>{ if(e.target.tagName==='TEXTAREA'||e.target.tagName==='INPUT')return;
+  if(e.key==='r'||e.key==='R'){ reviewOn=!reviewOn; draw(); } if(e.key==='Escape'){ cur.p1=null; cur.floorPts=null; clearSel(); draw(); } });
+
+// ---------- 平面図（作図表示・閲覧のみ）----------
 function _u(A,B){ const dx=B[0]-A[0],dy=B[1]-A[1]; const L=Math.hypot(dx,dy)||1; return [dx/L,dy/L]; }
 function wallFootprint(A,B,t){ const [ux,uy]=_u(A,B); const px=-uy,py=ux,e=t/2,h=t/2;
   return [[A[0]-ux*e+px*h,A[1]-uy*e+py*h],[A[0]-ux*e-px*h,A[1]-uy*e-py*h],[B[0]+ux*e-px*h,B[1]+uy*e-py*h],[B[0]+ux*e+px*h,B[1]+uy*e+py*h]]; }
-function fillPolyW(poly,style){ ctx.fillStyle=style; ctx.beginPath(); poly.forEach((p,i)=>{i?ctx.lineTo(sx(p[0]),sy(p[1])):ctx.moveTo(sx(p[0]),sy(p[1]));}); ctx.closePath(); ctx.fill(); }
-function lineW(a,b,style,w){ ctx.strokeStyle=style;ctx.lineWidth=w||1;ctx.beginPath();ctx.moveTo(sx(a[0]),sy(a[1]));ctx.lineTo(sx(b[0]),sy(b[1]));ctx.stroke(); }
-function lineS(x1,y1,x2,y2){ ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.stroke(); }
-function drawFitting(o,cat){ const w=S.walls.find(x=>x.id===o.host); if(!w)return; const A=PW(w.a.i,w.a.j),B=PW(w.b.i,w.b.j);
-  const [ux,uy]=_u(A,B); const px=-uy,py=ux; const t=w.thickness||(w.kind==='outer'?150:105); const C=PW(o.at.i,o.at.j); const hw=(o.width||900)/2;
-  const P=(s,d)=>[C[0]+ux*s+px*d, C[1]+uy*s+py*d];
-  fillPolyW([P(-hw,t/2+3),P(-hw,-t/2-3),P(hw,-t/2-3),P(hw,t/2+3)],'#fff');   // 壁を開口で抜く
-  lineW(P(-hw,t/2),P(-hw,-t/2),'#111',1.6); lineW(P(hw,t/2),P(hw,-t/2),'#111',1.6);  // 方立(ジャム)
-  if(cat==='window'){ // 壁面ライン2本（壁が枠として続く）＋中央ガラス線
-    lineW(P(-hw,t/2),P(hw,t/2),'#111',1.3); lineW(P(-hw,-t/2),P(hw,-t/2),'#111',1.3); lineW(P(-hw,0),P(hw,0),'#111',1.3); }
-  else if(cat==='hinge'){ const hinge=P(-hw,0); const openPt=P(-hw,2*hw); const dE=P(hw,0);
-    lineW(hinge,openPt,'#111',1.6);   // 開いた扉の葉
-    const cX=sx(hinge[0]),cY=sy(hinge[1]); const oX=sx(openPt[0]),oY=sy(openPt[1]); const eX=sx(dE[0]),eY=sy(dE[1]);
-    const r=Math.hypot(oX-cX,oY-cY); const aC=Math.atan2(eY-cY,eX-cX), aO=Math.atan2(oY-cY,oX-cX);
-    let d=aO-aC; while(d>Math.PI)d-=2*Math.PI; while(d<-Math.PI)d+=2*Math.PI;   // 90°側(短い弧)を描く
-    ctx.strokeStyle='#111';ctx.lineWidth=1;ctx.beginPath();ctx.arc(cX,cY,r,aC,aO,d<0);ctx.stroke(); }
-  else { lineW(P(-hw,t/5),P(hw*0.08,t/5),'#111',2.2); lineW(P(-hw*0.08,-t/5),P(hw,-t/5),'#111',2.2); }  // 引戸(2枚)
-}
+function drawFitting(o,cat){ const w=S.walls.find(x=>x.id===o.host); if(!w)return; const A=P(w.a),B=P(w.b);
+  const [ux,uy]=_u(A,B), px=-uy, py=ux, t=w.t||(w.kind==='outer'?150:105), sg=oSeg(o), Cc=sg.m, hw=(o.width||900)/2;
+  const Q=(s,d)=>[Cc[0]+ux*s+px*d, Cc[1]+uy*s+py*d];
+  fillPolyW([Q(-hw,t/2+3),Q(-hw,-t/2-3),Q(hw,-t/2-3),Q(hw,t/2+3)],C.moon);
+  lineW(Q(-hw,t/2),Q(-hw,-t/2),C.ink,1.6); lineW(Q(hw,t/2),Q(hw,-t/2),C.ink,1.6);
+  if(cat==='window'){ lineW(Q(-hw,t/2),Q(hw,t/2),C.ink,1.2); lineW(Q(-hw,-t/2),Q(hw,-t/2),C.ink,1.2); lineW(Q(-hw,0),Q(hw,0),C.ink,1.2); }
+  else if(cat==='hinge'){ const hinge=Q(-hw,0), openPt=Q(-hw,2*hw), dE=Q(hw,0); lineW(hinge,openPt,C.ink,1.5);
+    const cX=sx(hinge[0]),cY=sy(hinge[1]),oX=sx(openPt[0]),oY=sy(openPt[1]),eX=sx(dE[0]),eY=sy(dE[1]);
+    const r=Math.hypot(oX-cX,oY-cY), aC=Math.atan2(eY-cY,eX-cX), aO=Math.atan2(oY-cY,oX-cX);
+    let d=aO-aC; while(d>Math.PI)d-=2*Math.PI; while(d<-Math.PI)d+=2*Math.PI;
+    ctx.strokeStyle=C.ink; ctx.lineWidth=0.8; ctx.beginPath(); ctx.arc(cX,cY,r,aC,aO,d<0); ctx.stroke(); }
+  else { lineW(Q(-hw,t/5),Q(hw*0.08,t/5),C.ink,2); lineW(Q(-hw*0.08,-t/5),Q(hw,-t/5),C.ink,2); } }
 function drawPlan(){
-  ctx.setTransform(devicePixelRatio,0,0,devicePixelRatio,0,0);
-  ctx.fillStyle='#fff'; ctx.fillRect(0,0,innerWidth,innerHeight);
-  const lv=cur.lv, gy0=S.gy[0], gx0=S.gx[0];
-  for(let i=0;i<NX();i++) lineW([S.gx[i],gy0],[S.gx[i],WY()],'#e3e3e3',1);
-  for(let j=0;j<NY();j++) lineW([gx0,S.gy[j]],[WX(),S.gy[j]],'#e3e3e3',1);
-  ctx.font='11px sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';
-  for(let i=0;i<NX();i++){ const X=sx(S.gx[i]),Y=sy(gy0)+LOFF+4; ctx.strokeStyle='#333';ctx.lineWidth=1; lineS(X,sy(gy0),X,Y-11);
-    ctx.beginPath();ctx.arc(X,Y,11,0,7);ctx.fillStyle='#fff';ctx.fill();ctx.stroke();ctx.fillStyle='#111';ctx.fillText('X'+(i+1),X,Y); }
-  for(let j=0;j<NY();j++){ const X=sx(gx0)-LOFF-4,Y=sy(S.gy[j]); ctx.strokeStyle='#333';ctx.lineWidth=1; lineS(sx(gx0),Y,X+11,Y);
-    ctx.beginPath();ctx.arc(X,Y,11,0,7);ctx.fillStyle='#fff';ctx.fill();ctx.stroke();ctx.fillStyle='#111';ctx.fillText('Y'+(j+1),X,Y); }
-  for(const w of S.walls){ if(w.level!==lv)continue; const A=PW(w.a.i,w.a.j),B=PW(w.b.i,w.b.j); if(A[0]===B[0]&&A[1]===B[1])continue;
-    fillPolyW(wallFootprint(A,B,w.thickness||(w.kind==='outer'?150:105)),'#111'); }
-  const items=[...S.openings.filter(o=>o.level===lv).map(o=>({o,cat:o.type==='door'?'hinge':'window'})),
-               ...S.fittings.filter(o=>o.level===lv).map(o=>({o,cat:(o.type==='開き戸')?'hinge':'slide'}))];
-  for(const it of items) drawFitting(it.o,it.cat);
-  ctx.fillStyle='#111'; ctx.textAlign='center'; ctx.font='13px sans-serif';
-  for(const r of S.rooms){ if(r.level!==lv)continue; let cx=0,cy=0; r.pts.forEach(p=>{const q=PW(p.i,p.j);cx+=q[0];cy+=q[1];}); cx/=r.pts.length;cy/=r.pts.length; ctx.fillText(r.name||'室',sx(cx),sy(cy)); }
-  ctx.fillStyle='#111';ctx.textAlign='left';ctx.font='15px sans-serif'; ctx.fillText(lv+' 平面図',14,innerHeight-72);
+  ctx.fillStyle=C.moon; ctx.fillRect(0,0,innerWidth,innerHeight);
+  const lv=cur.lv;
+  for(let i=0;i<NX();i++) if(gridOn('x',i)){ lineW([S.gx[i],Y0()],[S.gx[i],Y1()],C.rule,1);
+    const X=sx(S.gx[i]),Y=sy(Y0())+LOFF+4; lineS(X,sy(Y0()),X,Y-11,C.nezu,1);
+    ctx.beginPath(); ctx.arc(X,Y,11,0,7); ctx.strokeStyle=C.nezu; ctx.stroke(); txt(S.glx[i]||Math.round(S.gx[i]),X,Y,font(S.glx[i]?10:8,true),C.ink); }
+  for(let j=0;j<NY();j++) if(gridOn('y',j)){ lineW([X0(),S.gy[j]],[X1(),S.gy[j]],C.rule,1);
+    const X=sx(X0())-LOFF-4,Y=sy(S.gy[j]); lineS(sx(X0()),Y,X+11,Y,C.nezu,1);
+    ctx.beginPath(); ctx.arc(X,Y,11,0,7); ctx.strokeStyle=C.nezu; ctx.stroke(); txt(S.gly[j]||Math.round(S.gy[j]),X,Y,font(S.gly[j]?10:8,true),C.ink); }
+  for(const w of S.walls){ if(w.level!==lv)continue; const A=P(w.a),B=P(w.b); if(A[0]===B[0]&&A[1]===B[1])continue;
+    fillPolyW(wallFootprint(A,B,w.t||(w.kind==='outer'?150:105)),C.ink); }
+  for(const o of S.openings){ if(o.level!==lv)continue;
+    drawFitting(o, o.type==='window'?'window':(o.type==='door'||o.op==='開き戸')?'hinge':'slide'); }
+  for(const r of S.rooms){ if(r.level!==lv)continue; const c=roomAt(r); if(c) txt(r.name||'室',sx(c[0]),sy(c[1]),font(12),C.ink); }
+  txt(lv+' 平面図',16,innerHeight-80,font(13,false,500),C.ink,'left');
   document.getElementById('stat').textContent='平面図 '+lv;
 }
 
-// ---- input ----
-let ptrs=new Map(), moved=false, downXY=null, pinch=null, dragAxis=false;
-cv.addEventListener('pointerdown',e=>{ cv.setPointerCapture(e.pointerId); ptrs.set(e.pointerId,{x:e.clientX,y:e.clientY});
-  moved=false; downXY={x:e.clientX,y:e.clientY};
-  dragAxis = cur.tool==='select' && cur.axis && hitAxis(e.clientX,e.clientY,cur.axis);
-  if(ptrs.size===2){ const a=[...ptrs.values()]; pinch={d:dist(a[0],a[1]),s:view.s,cx:(a[0].x+a[1].x)/2,cy:(a[0].y+a[1].y)/2,px:view.px,py:view.py}; } });
-cv.addEventListener('pointermove',e=>{ if(!ptrs.has(e.pointerId))return; const prev=ptrs.get(e.pointerId); ptrs.set(e.pointerId,{x:e.clientX,y:e.clientY});
-  if(ptrs.size===2&&pinch){ const a=[...ptrs.values()]; const nd=dist(a[0],a[1]); const r=nd/pinch.d; const ncx=(a[0].x+a[1].x)/2,ncy=(a[0].y+a[1].y)/2;
-    view.s=Math.max(0.006,Math.min(0.6,pinch.s*r)); view.px=ncx-(pinch.cx-pinch.px)*(view.s/pinch.s); view.py=ncy-(pinch.cy-pinch.py)*(view.s/pinch.s); moved=true; draw(); return; }
-  if(ptrs.size===1){ const dx=e.clientX-downXY.x,dy=e.clientY-downXY.y; if(Math.abs(dx)+Math.abs(dy)>8)moved=true;
-    if(dragAxis){ moveAxisTo(cur.axis, e.clientX, e.clientY); draw(); return; }
-    if(moved && !cur.p1 && !cur.floorPts){ view.px+=e.clientX-prev.x; view.py+=e.clientY-prev.y; draw(); } } });
-cv.addEventListener('pointerup',e=>{ const two=ptrs.size===2; ptrs.delete(e.pointerId); if(ptrs.size<2)pinch=null;
-  if(dragAxis){ dragAxis=false; if(moved){syncAxisBox(); moved=false; return;} }
-  if(!moved && !two) tap(e.clientX,e.clientY); moved=false; });
-function dist(a,b){return Math.hypot(a.x-b.x,a.y-b.y);}
+// ---------- 断面（X断面: y=一定で切り x を横軸 / Y断面: x=一定で切り y を横軸）----------
+function secGeom(){ const ax=cur.mode==='secX'?0:1, cx=1-ax, arr=ax===0?S.gy:S.gx; let k=cur.cut[cur.mode];
+  if(k==null||k>=arr.length){ k=Math.floor(arr.length/2); cur.cut[cur.mode]=k; } return {ax,cx,k,c:arr[k],arr}; }
+function secExtent(){ const ax=cur.mode==='secX'?0:1; let u0=1e18,u1=-1e18,z1=0;
+  for(const w of S.walls){ for(const p of [P(w.a),P(w.b)]){ u0=Math.min(u0,p[ax]); u1=Math.max(u1,p[ax]); } z1=Math.max(z1,wallZ(w)[1]); }
+  for(const o of S.roofs){ const b=RK.bb(o); if(!b)continue; const ov=+o.overhang||0; u0=Math.min(u0,(ax?b.y0:b.x0)-ov); u1=Math.max(u1,(ax?b.y1:b.x1)+ov);
+    RK.knots(o).forEach(k=>z1=Math.max(z1,k.z)); }
+  S.levels.forEach(l=>z1=Math.max(z1,+l.cl||0)); Object.values(S.datums).forEach(v=>z1=Math.max(z1,+v||0));
+  if(!(u1>u0)){ u0=0; u1=10000; } return {u0,u1,z0:-500,z1:z1+500}; }
+function fitSection(){ const e=secExtent(), ml=110, mr=150, top=96, bot=90; const aw=innerWidth-ml-mr, ah=innerHeight-top-bot;
+  view.s=Math.min(aw/(e.u1-e.u0),ah/(e.z1-e.z0)); view.px=ml+(aw-(e.u1-e.u0)*view.s)/2-e.u0*view.s; view.py=innerHeight-bot-(ah-(e.z1-e.z0)*view.s)/2+e.z0*view.s; }
+function drawSection(){
+  ctx.fillStyle=C.moon; ctx.fillRect(0,0,innerWidth,innerHeight);
+  const {ax,cx,c}=secGeom(), e=secExtent(), P2=u=>ax===0?[u,c]:[c,u], H=[], topId=topLevelId();
+  const uL=e.u0-700, uR=e.u1+700;
+  // GL
+  ctx.fillStyle='rgba(214,221,223,.45)'; ctx.fillRect(sx(uL),sy(0),sx(uR)-sx(uL),Math.max(0,sy(-450)-sy(0)));
+  lineS(sx(uL),sy(0),sx(uR),sy(0),C.ink,1); txt('GL ±0',sx(uL)-8,sy(0),font(11,true),C.sub,'right');
+  // 切断面に載る壁（立面として薄く）＋開口
+  for(const w of S.walls){ const A=P(w.a),B=P(w.b); if(Math.abs(A[cx]-c)>1||Math.abs(B[cx]-c)>1||Math.abs(A[ax]-B[ax])<1)continue;
+    const isTop=w.level===topId, z0=wallZ(w)[0], L=Math.hypot(B[0]-A[0],B[1]-A[1]);
+    const tops=RK.breaks(S.roofs,A,B).map(s=>{ const q=[A[0]+(B[0]-A[0])*s/L,A[1]+(B[1]-A[1])*s/L]; return [q[ax],wallTopAt(w,q[0],q[1],isTop)]; });
+    ctx.beginPath(); ctx.moveTo(sx(A[ax]),sy(z0)); ctx.lineTo(sx(B[ax]),sy(z0)); if(tops[0][0]<tops[tops.length-1][0]===(A[ax]<B[ax])) tops.reverse();
+    tops.forEach(t=>ctx.lineTo(sx(t[0]),sy(t[1]))); ctx.closePath(); ctx.fillStyle=isSel(w)?'rgba(164,88,127,.12)':'rgba(214,221,223,.55)'; ctx.fill();
+    ctx.strokeStyle=isSel(w)?C.kosumo:C.nezu; ctx.lineWidth=1; ctx.stroke();
+    H.push({kind:'wall',o:w,u0:Math.min(A[ax],B[ax]),u1:Math.max(A[ax],B[ax]),z0,z1:Math.max(...tops.map(t=>t[1]))});
+    for(const o of S.openings){ if(o.host!==w.id)continue; const sg=oSeg(o), base=wallZ(w)[0]-(w.base?0:0)+0, fl=w.base?wallZ(w)[0]:lvOf(o.level).fl;
+      const ua=Math.min(sg.a[ax],sg.b[ax]), ub=Math.max(sg.a[ax],sg.b[ax]), za=fl+(+o.sill||0), zb=fl+(+o.head||0);
+      ctx.fillStyle=C.moon; ctx.fillRect(sx(ua),sy(zb),sx(ub)-sx(ua),sy(za)-sy(zb)); ctx.strokeStyle=isSel(o)?C.kosumo:C.nezu; ctx.lineWidth=1; ctx.strokeRect(sx(ua),sy(zb),sx(ub)-sx(ua),sy(za)-sy(zb));
+      if(o.type==='window'){ lineS(sx(ua),sy((za+zb)/2),sx(ub),sy((za+zb)/2),C.rule,1); }
+      txt(o.id,sx((ua+ub)/2),sy(zb)-8,font(9,true),isSel(o)?C.kosumo:C.sub);
+      H.push({kind:'open',o,u0:ua,u1:ub,z0:za,z1:zb}); } }
+  // 切断される壁（濃く）＋開口の抜け
+  for(const w of S.walls){ const A=P(w.a),B=P(w.b); if(Math.abs(A[cx]-B[cx])<1)continue; if((A[cx]-c)*(B[cx]-c)>0)continue;
+    const t=(c-A[cx])/(B[cx]-A[cx]), q=[A[0]+(B[0]-A[0])*t,A[1]+(B[1]-A[1])*t], u=q[ax];
+    const L=Math.hypot(B[0]-A[0],B[1]-A[1]), d=Math.abs((B[cx]-A[cx])/L)||1, hw=Math.min(600,(w.t||150)/d)/2, isTop=w.level===topId, z0=wallZ(w)[0];
+    const zl=wallTopAt(w,...P2(u-hw),isTop), zr=wallTopAt(w,...P2(u+hw),isTop), sel=isSel(w);
+    ctx.fillStyle=sel?C.kosumo:C.ink; ctx.beginPath(); ctx.moveTo(sx(u-hw),sy(z0)); ctx.lineTo(sx(u+hw),sy(z0)); ctx.lineTo(sx(u+hw),sy(zr)); ctx.lineTo(sx(u-hw),sy(zl)); ctx.closePath(); ctx.fill();
+    for(const o of S.openings){ if(o.host!==w.id)continue; const sg=oSeg(o); if(distSeg(q,sg.a,sg.b)>1)continue;
+      const fl=w.base?z0:lvOf(o.level).fl, za=fl+(+o.sill||0), zb=fl+(+o.head||0);
+      ctx.fillStyle=C.moon; ctx.fillRect(sx(u-hw)-1,sy(zb),sx(u+hw)-sx(u-hw)+2,sy(za)-sy(zb));
+      if(o.type==='window') lineS(sx(u),sy(zb),sx(u),sy(za),isSel(o)?C.kosumo:C.nezu,1.5);
+      H.push({kind:'open',o,u0:u-hw,u1:u+hw,z0:za,z1:zb}); }
+    H.push({kind:'wall',o:w,u0:u-hw,u1:u+hw,z0,z1:Math.max(zl,zr)}); }
+  // 屋根
+  for(const o of S.roofs){ const b=RK.bb(o); if(!b)continue; const ov=+o.overhang||0, c0=cx?b.y0:b.x0, c1=cx?b.y1:b.x1; if(c<c0-ov-0.5||c>c1+ov+0.5)continue;
+    const along=RK.slopeAlong(o)===ax, lo=(ax?b.y0:b.x0)-ov, hi=(ax?b.y1:b.x1)+ov, kn=RK.knots(o), sel=isSel(o);
+    const us=[lo,...(along?kn.map(k=>k.pos).filter(p=>p>lo&&p<hi):[]),hi].sort((p,q)=>p-q), pts=us.map(u=>[u,RK.zAt(o,...P2(u))]);
+    ctx.strokeStyle=sel?C.kosumo:C.ink; ctx.lineWidth=2; ctx.beginPath(); pts.forEach((p,i)=>i?ctx.lineTo(sx(p[0]),sy(p[1])):ctx.moveTo(sx(p[0]),sy(p[1]))); ctx.stroke();
+    const top=pts.reduce((m,p)=>p[1]>m[1]?p:m,pts[0]); txt(o.id,sx(top[0]),sy(top[1])-22,font(11),sel?C.kosumo:C.sub);
+    H.push({kind:'roof',o,pts});
+    if(along){ for(const k of kn){ const isR=o.ridge===k.ref, X=sx(k.pos), Y=sy(k.z), hot=cur.drag&&cur.drag.h.k===k.ref;
+      ctx.beginPath(); ctx.arc(X,Y,5,0,7); ctx.fillStyle=C.moon; ctx.fill(); ctx.strokeStyle=hot||sel?C.kosumo:C.ink; ctx.lineWidth=1.5; ctx.stroke();
+      txt(`${isR?'棟':'軒'} ${r1(k.z)}`,X,Y+(isR?-11:15),font(10,true),hot||sel?C.kosumo:C.ink);
+      H.push({kind:'knot',o,k:k.ref,u:k.pos,z:k.z}); } } }
+  // レベル（FL 実線 / CL 破線）と datum
+  for(const L of S.levels){ const sel=isSel(L);
+    lineS(sx(uL),sy(L.fl),sx(uR),sy(L.fl),sel?C.kosumo:C.ink,1);
+    ctx.setLineDash([6,4]); lineS(sx(uL),sy(L.cl),sx(uR),sy(L.cl),sel?C.kosumo:C.nezu,1); ctx.setLineDash([]);
+    txt(`${L.id} FL ${r1(L.fl)}`,sx(uR)+8,sy(L.fl),font(11,true),sel?C.kosumo:C.ink,'left');
+    txt(`${L.id} CL ${r1(L.cl)}`,sx(uR)+8,sy(L.cl),font(11,true),sel?C.kosumo:C.sub,'left');
+    H.push({kind:'fl',o:L,z:L.fl,u0:uL,u1:uR}); H.push({kind:'cl',o:L,z:L.cl,u0:uL,u1:uR}); }
+  for(const [nm,z] of Object.entries(S.datums)){ const sel=cur.sel&&cur.sel.type==='datum'&&cur.sel.name===nm;
+    ctx.setLineDash([1,4]); lineS(sx(uL),sy(z),sx(uR),sy(z),sel?C.kosumo:C.nezu,1); ctx.setLineDash([]);
+    txt(`${nm} ${r1(z)}`,sx(uL)-8,sy(z),font(10,true),sel?C.kosumo:C.sub,'right'); H.push({kind:'datum',name:nm,z,u0:uL,u1:uR}); }
+  cur.handles=H;
+  const lab=(ax===0?S.gly:S.glx)[secGeom().k];
+  txt(`${cur.mode==='secX'?'X断面':'Y断面'}  ${ax===0?'y':'x'} = ${Math.round(c)}${lab?'（'+lab+' 通り）':''}`,16,innerHeight-80,font(13,false,500),C.ink,'left');
+  document.getElementById('stat').textContent='FL/CL・軒・棟はドラッグで高さ変更（5mm）';
+}
+function hitHandle(px,py){ let best=null,bd=1e9;
+  for(const h of cur.handles||[]){ let d=1e9;
+    if(h.kind==='knot') d=Math.hypot(px-sx(h.u),py-sy(h.z))-6;
+    else if(h.kind==='wall'||h.kind==='open'){ if(px>=sx(h.u0)-3&&px<=sx(h.u1)+3&&py<=sy(h.z0)&&py>=sy(h.z1)) d=h.kind==='open'?2:8; }
+    else if(h.kind==='roof'){ for(let i=0;i<h.pts.length-1;i++) d=Math.min(d,segDistS(px,py,h.pts[i],h.pts[i+1])); d+=2; }
+    else if(px>=sx(h.u0)-160&&px<=sx(h.u1)+160) d=Math.abs(py-sy(h.z))+1;
+    if(d<bd){bd=d;best=h;} }
+  return bd<11?best:null; }
+const DRAGGABLE=new Set(['knot','fl','cl','datum']);
+function applyDrag(h,z){ if(h.kind==='fl')h.o.fl=z; else if(h.kind==='cl')h.o.cl=z; else if(h.kind==='datum')S.datums[h.name]=z; else if(h.kind==='knot')h.k.z=z; }
+function selFromHandle(h){ if(h.kind==='fl'||h.kind==='cl') return {type:'level',o:h.o};
+  if(h.kind==='datum') return {type:'datum',name:h.name,o:null}; if(h.kind==='knot'||h.kind==='roof') return {type:'roof',o:h.o};
+  if(h.kind==='open') return {type:'opening',o:h.o}; return {type:'wall',o:h.o}; }
 
-function inXgutter(py){ const b=sy(S.gy[0]); return py>b+10 && py<b+LOFF+22; }
-function inYgutter(px){ const b=sx(S.gx[0]); return px<b-10 && px>b-LOFF-24; }
-function hitAxis(px,py,ax){ if(ax.a==='x') return Math.abs(px-sx(S.gx[ax.i]))<20; return Math.abs(py-sy(S.gy[ax.i]))<20; }
-function moveAxisTo(ax,px,py){ if(ax.a==='x'){ let v=Math.round(wx(px)/5)*5; v=clampAxis(S.gx,ax.i,v); S.gx[ax.i]=v; } else { let v=Math.round(wy(py)/5)*5; v=clampAxis(S.gy,ax.i,v); S.gy[ax.i]=v; } }
-function clampAxis(arr,i,v){ const lo=i>0?arr[i-1]+100:-1e9, hi=i<arr.length-1?arr[i+1]-100:1e9; return Math.max(lo,Math.min(hi,v)); }
+// ---------- 入力 ----------
+let ptrs=new Map(), moved=false, downXY=null, pinch=null, dragAxis=false;
+cv.addEventListener('pointerdown',e=>{ cv.setPointerCapture(e.pointerId); ptrs.set(e.pointerId,{x:e.clientX,y:e.clientY}); moved=false; downXY={x:e.clientX,y:e.clientY};
+  dragAxis=cur.mode==='edit'&&cur.tool==='select'&&cur.sel&&cur.sel.type==='axis'&&hitAxis(e.clientX,e.clientY,cur.sel);
+  cur.drag=null; if(isSec(cur.mode)&&ptrs.size===1){ const h=hitHandle(e.clientX,e.clientY); if(h&&DRAGGABLE.has(h.kind)) cur.drag={h,started:false}; }
+  if(ptrs.size===2){ cur.drag=null; const a=[...ptrs.values()]; pinch={d:dist(a[0],a[1]),s:view.s,cx:(a[0].x+a[1].x)/2,cy:(a[0].y+a[1].y)/2,px:view.px,py:view.py}; } });
+cv.addEventListener('pointermove',e=>{ if(!ptrs.has(e.pointerId))return; const prev=ptrs.get(e.pointerId); ptrs.set(e.pointerId,{x:e.clientX,y:e.clientY});
+  if(ptrs.size===2&&pinch){ const a=[...ptrs.values()], r=dist(a[0],a[1])/pinch.d, ncx=(a[0].x+a[1].x)/2, ncy=(a[0].y+a[1].y)/2;
+    view.s=Math.max(0.004,Math.min(0.8,pinch.s*r)); view.px=ncx-(pinch.cx-pinch.px)*(view.s/pinch.s); view.py=ncy-(pinch.cy-pinch.py)*(view.s/pinch.s); moved=true; draw(); return; }
+  if(ptrs.size!==1)return; if(Math.abs(e.clientX-downXY.x)+Math.abs(e.clientY-downXY.y)>6) moved=true; if(!moved)return;
+  if(cur.drag){ if(!cur.drag.started){ mut(); cur.drag.started=true; } applyDrag(cur.drag.h,Math.round(wy(e.clientY)/5)*5); draw(); if(cur.sel)renderSide(); return; }
+  if(dragAxis){ if(!dragAxis.started){ mut(); dragAxis={started:true}; } moveAxisTo(cur.sel,e.clientX,e.clientY); draw(); renderSide(); return; }
+  if(!cur.p1&&!cur.floorPts){ view.px+=e.clientX-prev.x; view.py+=e.clientY-prev.y; draw(); } });
+cv.addEventListener('pointerup',e=>{ const two=ptrs.size===2; ptrs.delete(e.pointerId); if(ptrs.size<2)pinch=null;
+  const dr=cur.drag; cur.drag=null; if(dr&&dr.started){ moved=false; selectEl(selFromHandle(dr.h)); return; }
+  if(dragAxis&&moved){ dragAxis=false; moved=false; return; } dragAxis=false;
+  if(!moved&&!two) tap(e.clientX,e.clientY); moved=false; });
+cv.addEventListener('wheel',e=>{ e.preventDefault(); const k=Math.exp(-e.deltaY*0.0015), ns=Math.max(0.004,Math.min(0.8,view.s*k)), f=ns/view.s;
+  view.px=e.clientX-(e.clientX-view.px)*f; view.py=e.clientY-(e.clientY-view.py)*f; view.s=ns; draw(); },{passive:false});
+function dist(a,b){return Math.hypot(a.x-b.x,a.y-b.y);}
+function inXgutter(py){ const b=sy(Y0()); return py>b+8&&py<b+LOFF+22; }
+function inYgutter(px){ const b=sx(X0()); return px<b-8&&px>b-LOFF-40; }
+function hitAxis(px,py,ax){ return ax.a==='x'?Math.abs(px-sx(S.gx[ax.i]))<20:Math.abs(py-sy(S.gy[ax.i]))<20; }
+function clampAxis(arr,i,v){ const lo=i>0?arr[i-1]+5:-1e9, hi=i<arr.length-1?arr[i+1]-5:1e9; return Math.max(lo,Math.min(hi,v)); }
+function moveAxisTo(ax,px,py){ const arr=ax.a==='x'?S.gx:S.gy; const v=Math.round((ax.a==='x'?wx(px):wy(py))/5)*5; arr[ax.i]=clampAxis(arr,ax.i,v); }
 
 function tap(px,py){
-  if(planView) return;   // 平面図モードは閲覧のみ
+  if(cur.mode==='plan')return;
+  if(isSec(cur.mode)){ const h=hitHandle(px,py); if(h) selectEl(selFromHandle(h)); else { clearSel(); draw(); } return; }
   if(cur.tool==='select'){
-    // axis label?
-    if(inXgutter(py)){ selectAxis('x', nidx(S.gx,wx(px))); return; }
-    if(inYgutter(px)){ selectAxis('y', nidx(S.gy,wy(py))); return; }
-    const hit=pick(px,py); if(hit){ closeAxis(); selectEl(hit); } else { closeAxis(); clearSel(); }
-    draw(); return;
-  }
+    if(inXgutter(py)){ selectEl({type:'axis',a:'x',i:nidx(S.gx,wx(px)),o:null}); return; }
+    if(inYgutter(px)){ selectEl({type:'axis',a:'y',i:nidx(S.gy,wy(py)),o:null}); return; }
+    const hit=pick(px,py); if(hit) selectEl(hit); else { clearSel(); draw(); } return; }
   const sn=snap(px,py);
   if(cur.tool==='wall_outer'||cur.tool==='wall_inner'){
-    if(!cur.p1){ cur.p1=sn; } else { if(cur.p1.i!==sn.i||cur.p1.j!==sn.j){ const outer=cur.tool==='wall_outer';
-      S.walls.push({id:"W"+(++uid),kind:outer?"outer":"inner",level:cur.lv,a:{...cur.p1},b:{...sn},
-        thickness:outer?150:105,finish:"",base:cur.lv==='1F'?"1FL":"2FL",top:cur.lv==='1F'?"2F梁天端":"軒高",h0:0,h1:0}); }
-      cur.p1=null; }
-  } else if(cur.tool==='opening'){ const w=nearestWall(px,py); if(w){
-      S.openings.push({id:"O"+(++uid),host:w.id,level:cur.lv,at:{...sn},width:1650,sill:400,head:2200,type:"window"}); } }
-  else if(cur.tool==='fitting'){ const w=nearestWall(px,py,true); if(w){
-      S.fittings.push({id:"K"+(++uid),host:w.id,level:cur.lv,at:{...sn},width:1650,sill:0,head:2000,type:"引戸"}); } }
-  else if(cur.tool==='floor'){ if(!cur.floorPts)cur.floorPts=[];
-      if(cur.floorPts.length>=3 && cur.floorPts[0].i===sn.i && cur.floorPts[0].j===sn.j){ S.floors.push({id:"F"+(++uid),level:cur.lv,pts:cur.floorPts,finish:"無垢フローリング"}); cur.floorPts=null; }
-      else cur.floorPts.push(sn); }
-  else if(cur.tool==='room'){ const rm=detectRoom(px,py); if(rm){ const nm=prompt("室名",""); if(nm!==null){ S.rooms.push({id:"R"+(++uid),name:nm||"室",level:cur.lv,pts:rm}); } } else alert("壁で囲まれた室が見つかりません"); }
+    if(!cur.p1) cur.p1=sn;
+    else { if(cur.p1.i!==sn.i||cur.p1.j!==sn.j){ const outer=cur.tool==='wall_outer'; mut();
+        const w={id:nid(outer?'OW':'IW',S.walls),kind:outer?'outer':'inner',level:cur.lv,a:{...cur.p1},b:{...sn},t:outer?150:105,raw:{}};
+        if(Object.keys(S.datums).length){ const tl=cur.lv; w.base=S.datums[tl+'L']!=null?tl+'L':null; }
+        S.walls.push(w); } cur.p1=null; }
+  } else if(cur.tool==='opening'||cur.tool==='fitting'){
+    if(!cur.p1){ cur.p1=sn; toast('2点目: 同じ壁の上の交点をタップ'); }
+    else { const a=cur.p1; cur.p1=null; if(a.i===sn.i&&a.j===sn.j){ toolHint(); draw(); return; }
+      const w=hostFor(a,sn,cur.lv); if(!w){ toast('2点が同じ壁の芯の上にありません（交点〜交点を1本の壁の上で）',2600); draw(); return; }
+      const fit=cur.tool==='fitting'; mut();
+      const o={id:nid(fit?'K':'O',S.openings),type:fit?'fitting':'window',op:fit?'引戸':'',host:w.id,level:cur.lv,a:{...a},b:{...sn},sill:fit?0:400,head:fit?2000:2200,raw:{}};
+      o.width=defWidth(o); S.openings.push(o); toolHint(); selectEl({type:'opening',o}); return; }
+  } else if(cur.tool==='floor'){ if(!cur.floorPts)cur.floorPts=[];
+    if(cur.floorPts.length>=3&&cur.floorPts[0].i===sn.i&&cur.floorPts[0].j===sn.j){ mut(); S.floors.push({id:nid('FL',S.floors),level:cur.lv,pts:cur.floorPts,finish:null,raw:{}}); cur.floorPts=null; }
+    else cur.floorPts.push(sn); }
+  else if(cur.tool==='room'){ const rm=detectRoom(px,py); if(rm){ const nm=prompt('室名',''); if(nm!==null){ mut(); S.rooms.push({id:nid('R',S.rooms),name:nm||'室',level:cur.lv,pts:rm,at:null,raw:{}}); } }
+    else toast('壁で囲まれた室が見つかりません',2000); }
   draw();
 }
-
-// ---- pick / select element ----
-function segDist(px,py,a,b){ const A=PW(a.i,a.j),B=PW(b.i,b.j); const x1=sx(A[0]),y1=sy(A[1]),x2=sx(B[0]),y2=sy(B[1]);
-  const dx=x2-x1,dy=y2-y1,L=dx*dx+dy*dy; let t=L?((px-x1)*dx+(py-y1)*dy)/L:0; t=Math.max(0,Math.min(1,t)); return Math.hypot(px-(x1+t*dx),py-(y1+t*dy)); }
-function nearestWall(px,py,preferInner){ let best=null,bd=26; const pool=preferInner?S.walls.filter(w=>w.kind==='inner'):S.walls;
-  for(const w of pool){ if(w.level!==cur.lv)continue; const d=segDist(px,py,w.a,w.b); if(d<bd){bd=d;best=w;} }
+function nearestWall(px,py,preferInner){ let best=null,bd=22; const pool=preferInner?S.walls.filter(w=>w.kind==='inner'):S.walls;
+  for(const w of pool){ if(w.level!==cur.lv)continue; const d=segDistS(px,py,P(w.a),P(w.b)); if(d<bd){bd=d;best=w;} }
   if(!best&&preferInner) return nearestWall(px,py,false); return best; }
-function pick(px,py){ // openings/建具 first, then walls, then rooms
-  for(const o of S.openings){ if(o.level!==cur.lv)continue; const sg=openSeg(o); if(sg && segDistW(px,py,sg.a,sg.b)<12) return {type:'opening',o}; }
-  for(const o of S.fittings){ if(o.level!==cur.lv)continue; const sg=openSeg(o); if(sg && segDistW(px,py,sg.a,sg.b)<12) return {type:'fitting',o}; }
+function pick(px,py){
+  for(const o of S.openings){ if(o.level!==cur.lv)continue; const sg=oSeg(o); if(segDistS(px,py,sg.a,sg.b)<10) return {type:'opening',o}; }
   const w=nearestWall(px,py); if(w) return {type:'wall',o:w};
-  for(const r of S.rooms){ if(r.level!==cur.lv)continue; if(ptInPoly(wx(px),wy(py),r.pts)) return {type:'room',o:r}; }
-  for(const f of S.floors){ if(f.level!==cur.lv)continue; if(ptInPoly(wx(px),wy(py),f.pts)) return {type:'floor',o:f}; }
+  for(const r of S.rooms){ if(r.level!==cur.lv)continue; const c=roomAt(r);
+    if(r.pts&&r.pts.length? ptInPolyW(wx(px),wy(py),r.pts.map(P)) : (c&&Math.hypot(px-sx(c[0]),py-sy(c[1]))<26)) return {type:'room',o:r}; }
+  for(const f of S.floors){ if(f.level!==cur.lv)continue; if(ptInPolyW(wx(px),wy(py),f.pts.map(P))) return {type:'floor',o:f}; }
   return null; }
-function ptInPoly(x,y,pts){ let c=false; for(let i=0,j=pts.length-1;i<pts.length;j=i++){ const A=PW(pts[i].i,pts[i].j),B=PW(pts[j].i,pts[j].j);
-  if(((A[1]>y)!==(B[1]>y)) && (x<(B[0]-A[0])*(y-A[1])/(B[1]-A[1])+A[0])) c=!c; } return c; }
-function clearSel(){ cur.sel=null; document.getElementById('sheet').classList.remove('open'); }
-function selectEl(hit){ cur.sel=hit; buildSheet(hit); }
-
-// ---- sheet ----
-function buildSheet(hit){ const s=document.getElementById('sheet'); const o=hit.o; let html="";
-  const num=(lb,v,st)=>`<label>${lb}<input type="number" data-k="${v}" value="${o[v]}" ${st||''}></label>`;
-  const dopts=Object.keys(S.datums).map(d=>`<option ${'' }>${d}</option>`).join("");
-  if(hit.type==='wall'){ html=`<h4>壁 ${o.id}（${o.kind==='outer'?'外壁':'内壁'}）</h4>
-    <label>種別<select data-k="kind"><option value="outer" ${o.kind==='outer'?'selected':''}>外壁</option><option value="inner" ${o.kind==='inner'?'selected':''}>内壁</option></select></label>
-    ${num('壁厚(mm)','thickness')}
-    <label>仕上げ<input data-k="finish" value="${o.finish||''}"></label>
-    <label>下基準<select data-k="base">${Object.keys(S.datums).map(d=>`<option ${o.base===d?'selected':''}>${d}</option>`).join("")}</select></label>
-    ${num('H0(下ズレ)','h0')}
-    <label>上基準<select data-k="top">${Object.keys(S.datums).map(d=>`<option ${o.top===d?'selected':''}>${d}</option>`).join("")}</select></label>
-    ${num('H1(上ズレ)','h1')}`;
-  } else if(hit.type==='opening'){ html=`<h4>開口 ${o.id}</h4>
-    <label>種別<select data-k="type"><option ${o.type==='window'?'selected':''}>window</option><option ${o.type==='door'?'selected':''}>door</option></select></label>
-    ${num('幅(mm)','width')} ${num('窓台 sill(mm)','sill')} ${num('まぐさ head(mm)','head')}`;
-  } else if(hit.type==='fitting'){ html=`<h4>建具 ${o.id}</h4>
-    <label>種別<select data-k="type">${FITTYPES.map(f=>`<option ${o.type===f?'selected':''}>${f}</option>`).join("")}</select></label>
-    ${num('幅(mm)','width')} ${num('下 sill(mm)','sill')} ${num('上 head(mm)','head')}`;
-  } else if(hit.type==='floor'){ html=`<h4>床 ${o.id}</h4><label>仕上げ<input data-k="finish" value="${o.finish||''}"></label>`;
-  } else if(hit.type==='room'){ html=`<h4>室 ${o.id}</h4><label>室名<input data-k="name" value="${o.name||''}"></label>`; }
-  html+=`<div class="rowb"><button class="del" id="sh_del">削除</button><button class="ok" id="sh_ok">閉じる</button></div>`;
-  s.innerHTML=html; s.classList.add('open');
-  s.querySelectorAll('[data-k]').forEach(el=>{ el.onchange=()=>{ let v=el.value; if(el.type==='number')v=parseFloat(v); o[el.dataset.k]=v; draw(); }; });
-  document.getElementById('sh_ok').onclick=()=>clearSel();
-  document.getElementById('sh_del').onclick=()=>{ delEl(hit); clearSel(); draw(); };
-}
-function delEl(hit){ if(hit.type==='wall'){ S.walls=S.walls.filter(x=>x!==hit.o); S.openings=S.openings.filter(o=>o.host!==hit.o.id); }
-  else if(hit.type==='opening') S.openings=S.openings.filter(x=>x!==hit.o);
-  else if(hit.type==='fitting') S.fittings=S.fittings.filter(x=>x!==hit.o);
-  else if(hit.type==='floor') S.floors=S.floors.filter(x=>x!==hit.o);
-  else if(hit.type==='room') S.rooms=S.rooms.filter(x=>x!==hit.o); }
-
-// ---- axis box ----
-function selectAxis(a,i){ cur.axis={a,i}; clearSel(); syncAxisBox(); document.getElementById('axisbox').classList.add('open'); draw(); }
-function closeAxis(){ cur.axis=null; document.getElementById('axisbox').classList.remove('open'); }
-function syncAxisBox(){ if(!cur.axis)return; document.getElementById('ax_nm').textContent=(cur.axis.a==='x'?'X':'Y')+(cur.axis.i+1);
-  const arr=cur.axis.a==='x'?S.gx:S.gy; document.getElementById('ax_pos').textContent=Math.round(arr[cur.axis.i]); }
-document.querySelectorAll('#axisbox [data-d]').forEach(b=>b.onclick=()=>{ if(!cur.axis)return; const arr=cur.axis.a==='x'?S.gx:S.gy;
-  arr[cur.axis.i]=clampAxis(arr,cur.axis.i,arr[cur.axis.i]+ +b.dataset.d); syncAxisBox(); draw(); });
-document.getElementById('ax_close').onclick=()=>{ closeAxis(); draw(); };
-
-// ---- rooms: planar face detection ----
-function detectRoom(px,py){ const faces=facesAt(cur.lv); const X=wx(px),Y=wy(py); let best=null,ba=1e18;
-  for(const f of faces){ if(ptInPolyW(X,Y,f.poly) && f.area<ba){ ba=f.area; best=f; } }
-  return best? best.idx : null; }
 function ptInPolyW(x,y,poly){ let c=false; for(let i=0,j=poly.length-1;i<poly.length;j=i++){ const A=poly[i],B=poly[j];
-  if(((A[1]>y)!==(B[1]>y)) && (x<(B[0]-A[0])*(y-A[1])/(B[1]-A[1])+A[0])) c=!c; } return c; }
-function facesAt(level){ const ws=S.walls.filter(w=>w.level===level); const key=p=>p.i+','+p.j;
-  // 全ノード（内壁端が外壁の途中に接するT字も分割点にする）
-  const nset={}; ws.forEach(w=>{nset[key(w.a)]=w.a; nset[key(w.b)]=w.b;}); const allN=Object.values(nset);
-  const segs=[];
-  for(const w of ws){ const A=PW(w.a.i,w.a.j),B=PW(w.b.i,w.b.j); const abx=B[0]-A[0],aby=B[1]-A[1]; const L2=abx*abx+aby*aby; if(L2<1)continue;
-    const on=[{t:0,p:w.a},{t:1,p:w.b}];
-    for(const c of allN){ if((c.i===w.a.i&&c.j===w.a.j)||(c.i===w.b.i&&c.j===w.b.j))continue; const C=PW(c.i,c.j);
-      const t=((C[0]-A[0])*abx+(C[1]-A[1])*aby)/L2; if(t<=0.001||t>=0.999)continue;
-      const d=Math.hypot(C[0]-(A[0]+abx*t), C[1]-(A[1]+aby*t)); if(d<1) on.push({t,p:c}); }
-    on.sort((u,v)=>u.t-v.t);
-    for(let k=0;k<on.length-1;k++){ const p=on[k].p,q=on[k+1].p; if(p.i!==q.i||p.j!==q.j) segs.push([p,q]); } }
-  const nodes={};
-  const add=(a,b)=>{ const A=PW(a.i,a.j),B=PW(b.i,b.j); const ang=Math.atan2(B[1]-A[1],B[0]-A[0]);
-    const he={a,b,ang,used:false}; (nodes[key(a)]=nodes[key(a)]||[]).push(he); return he; };
-  const HE=[]; for(const s of segs){ HE.push(add(s[0],s[1])); HE.push(add(s[1],s[0])); }
-  for(const k in nodes) nodes[k].sort((p,q)=>p.ang-q.ang);
+  if(((A[1]>y)!==(B[1]>y))&&(x<(B[0]-A[0])*(y-A[1])/(B[1]-A[1])+A[0])) c=!c; } return c; }
+
+// ---------- 左サイドパネル ----------
+const side=document.getElementById('side');
+function selectEl(sel){ cur.sel=sel; renderSide(); draw(); }
+function clearSel(){ cur.sel=null; side.classList.remove('open'); }
+function F(lb,val,opt){ opt=opt||{}; const r=document.createElement('label'); r.className='f'; const sp=document.createElement('span'); sp.textContent=lb; r.append(sp); let el;
+  if(opt.ro){ el=document.createElement('b'); el.className='ro'; el.textContent=val; }
+  else if(opt.sel){ el=document.createElement('select'); opt.sel.forEach(([v,t])=>{ const op=document.createElement('option'); op.value=v; op.textContent=t; if(String(v)===String(val))op.selected=true; el.append(op); }); }
+  else { el=document.createElement('input'); el.type=opt.text?'text':'number'; if(opt.step)el.step=opt.step; el.value=val==null?'':val; }
+  if(!opt.ro&&opt.on) el.onchange=()=>{ let v=el.value; if(el.type==='number'){ v=parseFloat(v); if(!isFinite(v)){ renderSide(); return; } } mut(); opt.on(v); draw(); renderSide(); };
+  r.append(el); side.append(r); return el; }
+function head(t,k){ const h=document.createElement('h4'); h.textContent=t; const p=document.createElement('div'); p.className='k'; p.textContent=k||''; side.append(h,p); }
+function grp(t){ const d=document.createElement('div'); d.className='grp'; d.textContent=t; side.append(d); }
+function note(t){ const d=document.createElement('div'); d.className='note'; d.textContent=t; side.append(d); }
+function acts(list){ const d=document.createElement('div'); d.className='acts'; for(const [t,fn,cls] of list){ const b=document.createElement('button'); b.className='lnk'+(cls?' '+cls:''); b.textContent=t; b.onclick=fn; d.append(b); } side.append(d); }
+const LVOPTS=()=>S.levels.map(l=>[l.id,l.id]);
+function renderSide(){ const s=cur.sel; if(!s){ clearSel(); return; } side.innerHTML=''; const o=s.o;
+  const closeAct=['閉じる',()=>{ clearSel(); draw(); }];
+  if(s.type==='wall'){ const [A,B]=[P(o.a),P(o.b)];
+    head(`壁 ${o.id}`,`${o.kind==='outer'?'外壁':'内壁'} · ${o.level}`);
+    F('種別',o.kind,{sel:[['outer','外壁'],['inner','内壁']],on:v=>o.kind=v});
+    F('長さ',Math.round(Math.hypot(B[0]-A[0],B[1]-A[1])),{ro:1});
+    F('壁厚',o.t,{on:v=>o.t=v});
+    F('階',o.level,{sel:LVOPTS(),on:v=>o.level=v});
+    const ds=Object.keys(S.datums);
+    if(ds.length){ grp('高さ（datum 基準・任意）'); const dopt=[['','（レベルの FL〜CL）'],...ds.map(d=>[d,d])];
+      F('下基準',o.base||'',{sel:dopt,on:v=>o.base=v||null}); if(o.base){ F('下ズレ H0',o.h0||0,{on:v=>o.h0=v}); F('上基準',o.top||'',{sel:dopt.slice(1),on:v=>o.top=v}); F('上ズレ H1',o.h1||0,{on:v=>o.h1=v}); } }
+    const z=wallZ(o); F('下端 / 上端',`${r1(z[0])} / ${r1(z[1])}`,{ro:1});
+    const n=S.openings.filter(x=>x.host===o.id).length; note(`この壁の開口 ${n} 件。最上階の壁は屋根面まで立ち上がる。`);
+    acts([closeAct,['削除',()=>{ mut(); S.walls=S.walls.filter(x=>x!==o); S.openings=S.openings.filter(x=>x.host!==o.id); clearSel(); draw(); },'del']]);
+  } else if(s.type==='opening'){ const sg=oSeg(o), span=Math.round(sg.span), ded=dedOf(o.type);
+    head(`${OTYPE[o.type]||'開口'} ${o.id}`,`${o.host||'壁なし'} · ${o.level}`);
+    F('ID',o.id,{text:1,on:v=>{ v=String(v).trim(); if(v&&!S.openings.some(x=>x!==o&&x.id===v)) o.id=v; }});
+    F('種別',o.type,{sel:[['window','窓'],['door','ドア'],['fitting','建具']],on:v=>{ const wasDef=o.width===defWidth(o); o.type=v; if(wasDef)o.width=defWidth(o); }});
+    if(o.type==='fitting') F('建具の種類',o.op||'引戸',{sel:FITTYPES.map(f=>[f,f]),on:v=>o.op=v});
+    else F('開閉',o.op||'',{text:1,on:v=>o.op=v});
+    grp('幅（単線 → 実開口）');
+    F('単線（交点〜交点）',span,{ro:1});
+    F('実開口幅',o.width,{on:v=>o.width=Math.max(0,Math.min(v,span))});
+    F('控除（単線 − 実開口）',r1(span-o.width),{ro:1});
+    acts([[`既定に戻す（単線 − ${ded}）`,()=>{ mut(); o.width=defWidth(o); draw(); renderSide(); }]]);
+    grp('高さ（FL から）');
+    F('窓台 sill',o.sill,{on:v=>o.sill=v}); F('まぐさ head',o.head,{on:v=>o.head=v}); F('内法高',r1(o.head-o.sill),{ro:1});
+    note('実開口は単線の中点に振り分けて置く（3D・図面とも）。単線を変えるときは開口ツールで交点を2つタップし直す。');
+    if(!openingOK(o)) note('⚠ 単線が壁の芯に乗っていないか、実開口が単線より大きい。');
+    if(o.raw&&o.raw._review) note('要確認: '+o.raw._review);
+    if(o.raw&&o.raw.note) note(o.raw.note);
+    acts([closeAct,['削除',()=>{ mut(); S.openings=S.openings.filter(x=>x!==o); clearSel(); draw(); },'del']]);
+  } else if(s.type==='floor'){ head(`床 ${o.id}`,o.level); F('仕上',o.finish||'',{text:1,on:v=>o.finish=v||null});
+    acts([closeAct,['削除',()=>{ mut(); S.floors=S.floors.filter(x=>x!==o); clearSel(); draw(); },'del']]);
+  } else if(s.type==='room'){ head(`室 ${o.name||o.id}`,`${o.id} · ${o.level}`); F('室名',o.name||'',{text:1,on:v=>o.name=v});
+    if(o.raw&&o.raw.area_m2) F('面積',o.raw.area_m2+' m²',{ro:1}); if(o.raw&&o.raw.note) note(o.raw.note);
+    acts([closeAct,['削除',()=>{ mut(); S.rooms=S.rooms.filter(x=>x!==o); clearSel(); draw(); },'del']]);
+  } else if(s.type==='level'){ head(`レベル ${o.id}`,'断面の FL/CL 線をドラッグしても変えられる');
+    F('FL',o.fl,{on:v=>o.fl=v}); F('CL',o.cl,{on:v=>o.cl=v}); F('天井高 CL − FL',r1(o.cl-o.fl),{ro:1});
+    acts([closeAct]);
+  } else if(s.type==='datum'){ head(`datum ${s.name}`,'基準高さ'); F('高さ',S.datums[s.name],{on:v=>S.datums[s.name]=v}); acts([closeAct]);
+  } else if(s.type==='roof'){ const sl=RK.slopes(o), eav=o.eaves||[];
+    head(`屋根 ${o.id}`,`${o.type==='gable'?'切妻':o.type==='lean_to'?'片流れ':o.type} · 棟は ${o.axis==='x'?'X':'Y'} 方向 · ${o.axis==='x'?'Y断面':'X断面'}で勾配が見える`);
+    F('軒の出',o.overhang||0,{on:v=>o.overhang=v});
+    grp('高さ（z）と位置（'+(o.axis==='x'?'y':'x')+'）');
+    if(o.ridge){ F('棟 高さ',o.ridge.z,{on:v=>o.ridge.z=v}); F('棟 位置',o.ridge.pos,{on:v=>o.ridge.pos=v}); }
+    eav.forEach((e,i)=>{ const n=eav.length>1?i+1:''; F(`軒${n} 高さ`,e.z,{on:v=>e.z=v}); F(`軒${n} 位置`,e.pos,{on:v=>e.pos=v}); });
+    grp('勾配');
+    sl.forEach((q,i)=>F(sl.length>1?`勾配 ${i+1}`:'勾配',`${q.deg.toFixed(1)}° / ${q.sun.toFixed(2)}寸`,{ro:1}));
+    if(o.ridge&&eav.length){ const avg=sl.length?sl.reduce((a,q)=>a+q.deg,0)/sl.length:0;
+      const setT=tn=>{ for(const e of eav) e.z=r1(o.ridge.z-tn*Math.abs(o.ridge.pos-e.pos)); };
+      F('勾配を指定（度）',r1(avg),{step:0.1,on:v=>setT(Math.tan(v*Math.PI/180))});
+      F('勾配を指定（寸）',Math.round(Math.tan(avg*Math.PI/180)*100)/10,{step:0.1,on:v=>setT(v/10)});
+      note('勾配を指定すると、棟の高さを固定して軒の高さを逆算する。'); }
+    if(o._review) note('要確認: '+o._review);
+    acts([closeAct]);
+  } else if(s.type==='axis'){ const arr=s.a==='x'?S.gx:S.gy, labs=s.a==='x'?S.glx:S.gly;
+    head(`通り芯 ${labs[s.i]||'（ラベルなし）'}`,`${s.a.toUpperCase()} 方向 · 要素はこの線に追従`);
+    F('位置',r1(arr[s.i]),{on:v=>arr[s.i]=clampAxis(arr,s.i,v)});
+    F('ラベル',labs[s.i]||'',{text:1,on:v=>labs[s.i]=String(v).trim()||null});
+    acts([...[-455,-91,91,455].map(d=>[(d>0?'+':'−')+Math.abs(d),()=>{ mut(); arr[s.i]=clampAxis(arr,s.i,arr[s.i]+d); draw(); renderSide(); }]),closeAct]);
+  }
+  side.classList.add('open'); }
+
+// ---------- 室の自動検出 ----------
+function detectRoom(px,py){ const faces=facesAt(cur.lv), X=wx(px), Y=wy(py); let best=null,ba=1e18;
+  for(const f of faces){ if(ptInPolyW(X,Y,f.poly)&&f.area<ba){ ba=f.area; best=f; } } return best?best.idx:null; }
+function facesAt(level){ const ws=S.walls.filter(w=>w.level===level), key=p=>p.i+','+p.j;
+  const nset={}; ws.forEach(w=>{nset[key(w.a)]=w.a; nset[key(w.b)]=w.b;}); const allN=Object.values(nset), segs=[];
+  for(const w of ws){ const A=P(w.a),B=P(w.b),abx=B[0]-A[0],aby=B[1]-A[1],L2=abx*abx+aby*aby; if(L2<1)continue; const on=[{t:0,p:w.a},{t:1,p:w.b}];
+    for(const c of allN){ if((c.i===w.a.i&&c.j===w.a.j)||(c.i===w.b.i&&c.j===w.b.j))continue; const Cc=P(c), t=((Cc[0]-A[0])*abx+(Cc[1]-A[1])*aby)/L2;
+      if(t<=0.001||t>=0.999)continue; if(Math.hypot(Cc[0]-(A[0]+abx*t),Cc[1]-(A[1]+aby*t))<1) on.push({t,p:c}); }
+    on.sort((u,v)=>u.t-v.t); for(let k=0;k<on.length-1;k++){ const p=on[k].p,q=on[k+1].p; if(p.i!==q.i||p.j!==q.j) segs.push([p,q]); } }
+  const nodes={}; const add=(a,b)=>{ const A=P(a),B=P(b), he={a,b,ang:Math.atan2(B[1]-A[1],B[0]-A[0]),used:false}; (nodes[key(a)]=nodes[key(a)]||[]).push(he); return he; };
+  const HE=[]; for(const s of segs){ HE.push(add(s[0],s[1])); HE.push(add(s[1],s[0])); } for(const k in nodes) nodes[k].sort((p,q)=>p.ang-q.ang);
   const faces=[];
   for(const h0 of HE){ if(h0.used)continue; const pts=[]; let he=h0,g=0;
-    do{ he.used=true; pts.push(he.a); const out=nodes[key(he.b)]; if(!out){break;}
-      let idx=out.findIndex(e=>e.b.i===he.a.i&&e.b.j===he.a.j); if(idx<0)break; const n=out.length; he=out[(idx-1+n)%n]; g++; }
-    while(he!==h0 && g<4000);
-    if(pts.length>=3){ const poly=pts.map(p=>PW(p.i,p.j)); let ar=0; for(let i=0,j=poly.length-1;i<poly.length;j=i++){ ar+=poly[j][0]*poly[i][1]-poly[i][0]*poly[j][1]; } ar/=2;
-      if(ar>1) faces.push({idx:pts,poly,area:ar}); } }
+    do{ he.used=true; pts.push(he.a); const out=nodes[key(he.b)]; if(!out)break; const idx=out.findIndex(e=>e.b.i===he.a.i&&e.b.j===he.a.j); if(idx<0)break; he=out[(idx-1+out.length)%out.length]; g++; }
+    while(he!==h0&&g<4000);
+    if(pts.length>=3){ const poly=pts.map(P); let ar=0; for(let i=0,j=poly.length-1;i<poly.length;j=i++) ar+=poly[j][0]*poly[i][1]-poly[i][0]*poly[j][1]; ar/=2; if(ar>1) faces.push({idx:pts,poly,area:ar}); } }
   return faces; }
 
-// ---- UI wiring ----
-function val(id){return document.getElementById(id).value;}
-document.querySelectorAll('.lv[data-lv]').forEach(el=>el.onclick=()=>{ document.querySelectorAll('.lv[data-lv]').forEach(e=>e.classList.remove('on')); el.classList.add('on'); cur.lv=el.dataset.lv; cur.p1=null;cur.floorPts=null;clearSel();closeAxis(); draw(); });
-document.querySelectorAll('[data-tool]').forEach(b=>b.onclick=()=>{ document.querySelectorAll('[data-tool]').forEach(x=>x.classList.remove('on')); b.classList.add('on'); cur.tool=b.dataset.tool; cur.p1=null;cur.floorPts=null;clearSel();closeAxis(); });
-document.getElementById('undo').onclick=()=>{ if(cur.floorPts&&cur.floorPts.length){cur.floorPts.pop();draw();return;} if(cur.p1){cur.p1=null;draw();return;}
-  if(cur.tool==='room'&&S.rooms.length){S.rooms.pop();} else if(cur.tool==='fitting'&&S.fittings.length){S.fittings.pop();}
-  else if(cur.tool==='opening'&&S.openings.length){S.openings.pop();} else if(S.openings.length){S.openings.pop();} else if(S.walls.length){S.walls.pop();} draw(); };
-document.getElementById('btnplan').onclick=()=>{ planView=!planView; const b=document.getElementById('btnplan'); b.textContent=planView?'編集':'平面図'; b.classList.toggle('on',planView);
-  document.getElementById('planpng').style.display=planView?'block':'none'; clearSel(); closeAxis(); draw(); };
+// ---------- 表示切替・UI ----------
+function renderLevels(){ const box=document.getElementById('lvs'); box.innerHTML='';
+  const ids=[...new Set([...S.levels.map(l=>l.id),...S.walls.map(w=>w.level)])];
+  if(!ids.includes(cur.lv)) cur.lv=ids[0]||'1F';
+  for(const id of ids){ const b=document.createElement('button'); b.className='tb'+(id===cur.lv?' on':''); b.textContent=id;
+    b.onclick=()=>{ cur.lv=id; cur.p1=null; cur.floorPts=null; clearSel(); renderLevels(); draw(); }; box.append(b); } }
+function toolHint(){ let t='';
+  if(cur.mode==='edit') t={select:'',wall_outer:'交点を2つタップして外壁を引く',wall_inner:'交点を2つタップして内壁を引く',
+    opening:`同じ壁の上の交点を2つタップ → 単線。実開口は 単線 − ${dedOf('window')}（窓）を中点に振り分け`,
+    fitting:`同じ壁の上の交点を2つタップ → 単線。実開口は 単線 − ${dedOf('fitting')}`,floor:'交点を順にタップ、最初の点で閉じる',room:'壁で囲まれた内側をタップ'}[cur.tool]||'';
+  else if(isSec(cur.mode)) t='◀ ▶ で切断位置を移動。線や点をタップすると左に詳細';
+  toast(t); }
+function updateSecbar(){ const sb=document.getElementById('secbar'); sb.hidden=!isSec(cur.mode); if(sb.hidden)return;
+  const g=secGeom(), lab=(g.ax===0?S.gly:S.glx)[g.k]; document.getElementById('sec_nm').textContent=`${g.ax===0?'y':'x'}=${Math.round(g.c)}${lab?' '+lab:''}`; }
+function setView(v){ const was=cur.mode; if(!isSec(was)&&isSec(v)) planSaved={...view};
+  cur.mode=v; cur.p1=null; cur.floorPts=null; clearSel(); document.body.dataset.mode=v;
+  if(isSec(v)) fitSection(); else if(isSec(was)&&planSaved) view={...planSaved};
+  document.querySelectorAll('[data-v]').forEach(b=>b.classList.toggle('on',b.dataset.v===v));
+  document.getElementById('planpng').hidden=v!=='plan'; updateSecbar(); toolHint(); draw(); }
+document.querySelectorAll('[data-v]').forEach(b=>b.onclick=()=>setView(b.dataset.v));
+function stepCut(d){ const g=secGeom(); cur.cut[cur.mode]=Math.max(0,Math.min(g.arr.length-1,g.k+d)); updateSecbar(); draw(); }
+document.getElementById('sec_prev').onclick=()=>stepCut(-1);
+document.getElementById('sec_next').onclick=()=>stepCut(1);
+document.querySelectorAll('[data-tool]').forEach(b=>b.onclick=()=>{ document.querySelectorAll('[data-tool]').forEach(x=>x.classList.remove('on')); b.classList.add('on');
+  cur.tool=b.dataset.tool; cur.p1=null; cur.floorPts=null; clearSel(); toolHint(); draw(); });
+document.getElementById('undo').onclick=undo;
 document.getElementById('planpng').onclick=()=>{ const a=document.createElement('a'); a.href=cv.toDataURL('image/png'); a.download=cur.lv+'_plan.png'; a.click(); };
-document.getElementById('menu').onclick=()=>{ syncPanelFrom(); document.getElementById('panel').classList.add('open'); };
-document.getElementById('close').onclick=()=>{ syncPanelTo(); document.getElementById('panel').classList.remove('open'); draw(); };
-document.getElementById('g_apply').onclick=()=>{ S.pitch=+val('g_pitch'); S.gx=uniform(+val('g_x'),S.pitch); S.gy=uniform(+val('g_y'),S.pitch); fit(); draw(); };
-function syncPanelFrom(){ g('g_pitch',S.pitch);g('g_x',NX());g('g_y',NY());
-  document.getElementById('datums').value=Object.entries(S.datums).map(([k,v])=>k+":"+v).join("\n");
-  g('r_ridge',S.roof.ridge);g('r_pitch',S.roof.pitch);g('r_z',S.roof.z);g('r_ov',S.roof.ov);
-  document.getElementById('r_eq').checked=S.roof.eq; document.getElementById('r_type').value=S.roof.type; }
-function syncPanelTo(){ const dt={}; val('datums').split("\n").forEach(l=>{ const m=l.split(":"); if(m.length===2&&m[0].trim())dt[m[0].trim()]=+m[1]; }); if(Object.keys(dt).length)S.datums=dt;
-  S.roof={type:val('r_type'),ridge:+val('r_ridge'),pitch:+val('r_pitch'),z:+val('r_z'),ov:+val('r_ov'),eq:document.getElementById('r_eq').checked}; }
-function g(id,v){document.getElementById(id).value=v;}
+const val=id=>document.getElementById(id).value, setv=(id,v)=>{ document.getElementById(id).value=v; };
+document.getElementById('menu').onclick=()=>{ syncPanelFrom(); clearSel(); document.getElementById('panel').classList.add('open'); };
+document.getElementById('close').onclick=()=>{ syncPanelTo(); document.getElementById('panel').classList.remove('open'); toolHint(); draw(); };
+document.getElementById('g_apply').onclick=()=>{ mut(); S.pitch=+val('g_pitch'); S.gx=uniform(+val('g_x'),S.pitch); S.gy=uniform(+val('g_y'),S.pitch);
+  S.glx=S.gx.map((_,i)=>'X'+(i+1)); S.gly=S.gy.map((_,i)=>'Y'+(i+1)); S.walls=[]; S.openings=[]; S.floors=[]; S.rooms=[]; fit(); draw(); };
+function syncPanelFrom(){ setv('g_pitch',S.pitch); setv('g_x',NX()); setv('g_y',NY());
+  for(const k of ['window','door','fitting']) setv('d_'+k,dedOf(k));
+  setv('datums',Object.entries(S.datums).map(([k,v])=>k+':'+v).join('\n')); }
+function syncPanelTo(){ const dt={}; val('datums').split('\n').forEach(l=>{ const m=l.split(':'); if(m.length===2&&m[0].trim()&&isFinite(+m[1])) dt[m[0].trim()]=+m[1]; });
+  const dd={}; for(const k of ['window','door','fitting']){ const v=parseFloat(val('d_'+k)); dd[k]=isFinite(v)?v:dedOf(k); }
+  if(JSON.stringify(dt)!==JSON.stringify(S.datums)||JSON.stringify(dd)!==JSON.stringify(S.rules.deduct)){ mut(); S.datums=dt; S.rules=Object.assign({},S.rules,{deduct:dd}); } }
 
-// ---- export / import ----
-function buildHouse(){ const T=(a,i)=>a+(i+1);
-  const walls=S.walls.map(w=>({id:w.id,kind:w.kind,level:w.level,from:[T('X',w.a.i),T('Y',w.a.j)],to:[T('X',w.b.i),T('Y',w.b.j)],
-    thickness:w.thickness,finish:w.finish||"",base:w.base,h0:w.h0||0,top:w.top,h1:w.h1||0}));
-  const openings=S.openings.map(o=>({id:o.id,host:o.host,level:o.level,at:[T('X',o.at.i),T('Y',o.at.j)],width:o.width,sill:o.sill,head:o.head,type:o.type}));
-  const fittings=S.fittings.map(o=>({id:o.id,host:o.host,level:o.level,at:[T('X',o.at.i),T('Y',o.at.j)],width:o.width,sill:o.sill,head:o.head,type:o.type}));
-  const floors=S.floors.map(f=>({id:f.id,level:f.level,finish:f.finish||"",boundary:f.pts.map(p=>[T('X',p.i),T('Y',p.j)])}));
-  const rooms=S.rooms.map(r=>({id:r.id,name:r.name,level:r.level,boundary:r.pts.map(p=>[T('X',p.i),T('Y',p.j)])}));
-  const h={ schema:"wood-house/0.2", units:"mm",
-    grid:{pitch:S.pitch,x_axes:NX(),y_axes:NY(),x_positions:S.gx.slice(),y_positions:S.gy.slice(),origin:[0,0,0]},
-    datums:S.datums,
-    levels:[{id:"1F",fl:S.datums["1FL"]||600,cl:S.datums["1CL"]||2900},{id:"2F",fl:S.datums["2FL"]||3110,cl:S.datums["2CL"]||4930}],
-    walls, openings, fittings, floors, rooms };
-  if(S.roof.type==="gable"){ const foot=topFoot(); if(foot) h.roof={outlines:[{id:"母屋",type:"gable",boundary:foot,overhang:S.roof.ov,
-    ridge:{axis:"X"+S.roof.ridge,z:S.roof.z},pitch_deg:S.roof.pitch,equal_pitch:S.roof.eq,eave_h0:[0,0],finish:"ガルバリウム立平"}]}; }
-  return h; }
-function topFoot(){ let ws=S.walls.filter(w=>w.kind==="outer"&&w.level==="2F"); if(!ws.length)ws=S.walls.filter(w=>w.kind==="outer"); if(!ws.length)return null;
-  let is=[],js=[]; ws.forEach(w=>{is.push(w.a.i,w.b.i);js.push(w.a.j,w.b.j);}); const i0=Math.min(...is),i1=Math.max(...is),j0=Math.min(...js),j1=Math.max(...js);
-  return [["X"+(i0+1),"Y"+(j0+1)],["X"+(i1+1),"Y"+(j0+1)],["X"+(i1+1),"Y"+(j1+1)],["X"+(i0+1),"Y"+(j1+1)]]; }
+// ---------- 読込（v0.2 トークン / v0.3 mm を mm に正規化 → 通り芯インデックス）----------
+function loadHouse(h){ const raw=JSON.parse(JSON.stringify(h)); S.base=raw; const g=raw.grid||{};
+  let bx,by;
+  if(Array.isArray(g.x)&&g.x.length&&typeof g.x[0]==='object'){ bx=g.x.map(a=>({p:+a.pos,l:a.label})); by=(g.y||[]).map(a=>({p:+a.pos,l:a.label}));
+    S.pitch=g.pitch||(bx.length>1?Math.round(bx[1].p-bx[0].p):910)||910; }
+  else { const p=g.pitch||910, xs=g.x_positions||uniform(g.x_axes||14,p), ys=g.y_positions||uniform(g.y_axes||11,p);
+    bx=xs.map((v,i)=>({p:v,l:'X'+(i+1)})); by=ys.map((v,i)=>({p:v,l:'Y'+(i+1)})); S.pitch=p; }
+  const axv=(arr,t)=>{ const f=parseFloat(String(t).slice(1))-1, lo=Math.max(0,Math.min(arr.length-1,Math.floor(f))), hi=Math.max(0,Math.min(arr.length-1,Math.ceil(f)));
+    if(lo===hi)return arr[lo].p; const k=f-Math.floor(f); return arr[lo].p*(1-k)+arr[hi].p*k; };
+  const mm=p=>(Array.isArray(p)&&typeof p[0]==='string')?[axv(bx,p[0]),axv(by,p[1])]:[+p[0],+p[1]];
+  S.rules=Object.assign({},raw.opening_rules||{},{deduct:Object.assign({window:130,door:40,fitting:0},(raw.opening_rules||{}).deduct||{})});
+  S.datums=Object.assign({},raw.datums||{});
+  S.levels=(raw.levels||[]).map(l=>Object.assign({},l,{fl:+l.fl||0,cl:+(l.cl!=null?l.cl:2400)}));
+  if(!S.levels.length) S.levels=[{id:'1F',fl:600,cl:2900}];
+  const W=(raw.walls||[]).map((w,n)=>{ const t=(w.thickness&&typeof w.thickness==='object')?(+w.thickness.out||0)+(+w.thickness.in||0):(+w.thickness||(w.kind==='inner'?105:150));
+    return {id:w.id||('W'+(n+1)),kind:w.kind||'outer',level:w.level||'1F',A:mm(w.from),B:mm(w.to),t,base:w.base||null,top:w.top||null,h0:+w.h0||0,h1:+w.h1||0,raw:w}; });
+  const ops=[...(raw.openings||[]).map(o=>({o,fit:false})),...(raw.fittings||[]).map(o=>({o,fit:true}))];
+  const O=ops.map(({o,fit},n)=>{ const type=fit?'fitting':(o.type||'window'), w=W.find(x=>x.id===o.host); let A,B;
+    if(o.from&&o.to){ A=mm(o.from); B=mm(o.to); }
+    else if(o.at){ const Cc=mm(o.at); A=Cc; B=Cc;
+      if(w){ const L=Math.hypot(w.B[0]-w.A[0],w.B[1]-w.A[1])||1, ux=(w.B[0]-w.A[0])/L, uy=(w.B[1]-w.A[1])/L;
+        const d=+(S.rules.deduct[type]||0), span=Math.min(L,Math.ceil(((+o.width||900)+d-1)/S.pitch)*S.pitch);
+        let s=(Cc[0]-w.A[0])*ux+(Cc[1]-w.A[1])*uy; s=Math.max(span/2,Math.min(L-span/2,s));
+        A=[w.A[0]+ux*(s-span/2),w.A[1]+uy*(s-span/2)]; B=[w.A[0]+ux*(s+span/2),w.A[1]+uy*(s+span/2)]; } }
+    else return null;
+    return {id:o.id||((fit?'K':'O')+(n+1)),type,op:fit?(o.type||'引戸'):(o.operation||''),host:o.host||null,level:o.level||'1F',A,B,
+      width:+o.width||0,sill:+(o.sill!=null?o.sill:(fit?0:400)),head:+(o.head!=null?o.head:2000),raw:fit?Object.assign({},o,{type:'fitting'}):o}; }).filter(Boolean);
+  const closed=b=>b.length>2&&b[0][0]===b[b.length-1][0]&&b[0][1]===b[b.length-1][1];
+  const Fl=(raw.floors||[]).filter(f=>f.boundary&&f.boundary.length).map((f,n)=>{ let b=f.boundary.map(mm); const cl=closed(b); if(cl)b=b.slice(0,-1);
+    return {id:f.id||('FL'+(n+1)),level:f.level||'1F',B:b,finish:f.finish||null,closed:cl,raw:f}; });
+  const R=(raw.rooms||[]).map((r,n)=>{ let b=r.boundary&&r.boundary.length?r.boundary.map(mm):null; const cl=b?closed(b):false; if(cl)b=b.slice(0,-1);
+    return {id:r.id||('R'+(n+1)),name:r.name||'室',level:r.level||'1F',B:b,closed:cl,at:r.label_at?mm(r.label_at):null,raw:r}; });
+  S.roofs=(((raw.roof||{}).outlines)||[]).map(o=>{ const r=JSON.parse(JSON.stringify(o)); r.boundary=(o.boundary||[]).map(mm);
+    if(!r.eaves&&r.ridge&&r.ridge.axis){ const b=RK.bb(r), rx=axv(bx,r.ridge.axis), rz=+r.ridge.z, tn=Math.tan((o.pitch_deg||20)*Math.PI/180);
+      r.axis='y'; r.ridge={pos:r1(rx),z:rz}; r.eaves=[{pos:b.x0,z:r1(rz-tn*(rx-b.x0))},{pos:b.x1,z:r1(rz-tn*(b.x1-rx))}];
+      delete r.pitch_deg; delete r.equal_pitch; delete r.eave_h0; }
+    return r; });
+  for(const w of W) if(!S.levels.some(l=>l.id===w.level)){ const top=S.levels.reduce((m,l)=>Math.max(m,l.cl),0); S.levels.push({id:w.level,fl:top+200,cl:top+2600}); }
+  // 通り芯 = 基準グリッド ∪ データ座標（1mm 以内は同一線）
+  const xs=bx.map(a=>a.p), ys=by.map(a=>a.p), push=p=>{ xs.push(p[0]); ys.push(p[1]); };
+  W.forEach(w=>{push(w.A);push(w.B);}); O.forEach(o=>{push(o.A);push(o.B);}); Fl.forEach(f=>f.B.forEach(push)); R.forEach(r=>(r.B||[]).forEach(push));
+  const uq=arr=>{ const s=arr.map(v=>r1(v)).sort((a,b)=>a-b), out=[]; for(const v of s){ if(!out.length||v-out[out.length-1]>1) out.push(v); } return out; };
+  S.gx=uq(xs); S.gy=uq(ys);
+  S.glx=S.gx.map(v=>{ const a=bx.find(b=>Math.abs(b.p-v)<=1); return a?a.l:null; }); S.gly=S.gy.map(v=>{ const a=by.find(b=>Math.abs(b.p-v)<=1); return a?a.l:null; });
+  const I=p=>({i:nidx(S.gx,p[0]),j:nidx(S.gy,p[1])});
+  S.walls=W.map(w=>({id:w.id,kind:w.kind,level:w.level,a:I(w.A),b:I(w.B),t:w.t,base:w.base,top:w.top,h0:w.h0,h1:w.h1,raw:w.raw}));
+  S.openings=O.map(o=>({id:o.id,type:o.type,op:o.op,host:o.host,level:o.level,a:I(o.A),b:I(o.B),width:o.width,sill:o.sill,head:o.head,raw:o.raw}));
+  S.floors=Fl.map(f=>({id:f.id,level:f.level,pts:f.B.map(I),finish:f.finish,closed:f.closed,raw:f.raw}));
+  S.rooms=R.map(r=>({id:r.id,name:r.name,level:r.level,pts:r.B?r.B.map(I):null,closed:r.closed,at:r.at,raw:r.raw}));
+  S.title=(raw.meta&&(raw.meta.name||raw.meta.title))||'間取り'; document.getElementById('ttl').textContent=S.title;
+  hist.length=0; cur.cut={secX:null,secY:null}; clearSel(); renderLevels(); fit(); }
+
+// ---------- 書出し（wood-house/0.3。読込時の未知キーは素通し）----------
+function buildHouse(){ const out=JSON.parse(JSON.stringify(S.base||{})); const MP=p=>[r1(S.gx[p.i]),r1(S.gy[p.j])];
+  out.schema='wood-house/0.3'; out.units='mm';
+  const gx=[],gy=[]; S.gx.forEach((v,i)=>{ if(S.glx[i]) gx.push({label:S.glx[i],pos:r1(v)}); }); S.gy.forEach((v,j)=>{ if(S.gly[j]) gy.push({label:S.gly[j],pos:r1(v)}); });
+  out.grid=Object.assign({},(out.grid&&Array.isArray(out.grid.x))?out.grid:{},{x:gx,y:gy});
+  out.levels=JSON.parse(JSON.stringify(S.levels)); out.datums=JSON.parse(JSON.stringify(S.datums));
+  out.walls=S.walls.map(w=>{ const r=Object.assign({},w.raw||{}); r.id=w.id; r.kind=w.kind; r.level=w.level; r.from=MP(w.a); r.to=MP(w.b);
+    const rt=(w.raw||{}).thickness; r.thickness=(rt&&typeof rt==='object'&&(+rt.out||0)+(+rt.in||0)===w.t)?rt:{out:w.t/2,in:w.t/2};
+    if(w.base){ r.base=w.base; r.h0=w.h0||0; r.top=w.top; r.h1=w.h1||0; } else { delete r.base; delete r.h0; delete r.top; delete r.h1; } return r; });
+  out.openings=S.openings.map(o=>{ const r=Object.assign({},o.raw||{}); delete r.at; r.id=o.id; r.type=o.type; r.host=o.host; r.level=o.level;
+    r.from=MP(o.a); r.to=MP(o.b); r.width=o.width; r.sill=o.sill; r.head=o.head; if(o.op) r.operation=o.op; return r; });
+  delete out.fittings;
+  out.floors=S.floors.map(f=>{ const r=Object.assign({},f.raw||{}); r.id=f.id; r.level=f.level; const b=f.pts.map(MP); if(f.closed)b.push(b[0]); r.boundary=b; r.finish=f.finish||null; return r; });
+  out.rooms=S.rooms.map(rm=>{ const r=Object.assign({},rm.raw||{}); r.id=rm.id; r.name=rm.name; r.level=rm.level;
+    if(rm.pts){ const b=rm.pts.map(MP); if(rm.closed)b.push(b[0]); r.boundary=b; } if(rm.at) r.label_at=[r1(rm.at[0]),r1(rm.at[1])]; return r; });
+  out.roof=Object.assign({},out.roof||{},{outlines:JSON.parse(JSON.stringify(S.roofs))});
+  out.opening_rules=JSON.parse(JSON.stringify(S.rules));
+  return out; }
 window.getHouse=()=>buildHouse();
-document.getElementById('export').onclick=()=>{ syncPanelTo(); document.getElementById('json').value=JSON.stringify(buildHouse(),null,2); };
-document.getElementById('copy').onclick=async()=>{ const t=document.getElementById('json'); if(!t.value)t.value=JSON.stringify(buildHouse(),null,2); t.select(); try{await navigator.clipboard.writeText(t.value);}catch(e){document.execCommand('copy');} };
-document.getElementById('dl').onclick=()=>{ const b=new Blob([document.getElementById('json').value||JSON.stringify(buildHouse(),null,2)],{type:'application/json'}); const a=document.createElement('a'); a.href=URL.createObjectURL(b); a.download='house.json'; a.click(); };
-document.getElementById('import').onclick=()=>{ try{ loadHouse(JSON.parse(val('json'))); draw(); }catch(e){ alert('JSON解析失敗: '+e.message);} };
-document.getElementById('clear').onclick=()=>{ if(confirm('全消去?')){ S.walls=[];S.openings=[];S.fittings=[];S.floors=[];S.rooms=[]; cur.p1=null;cur.floorPts=null;clearSel(); draw(); } };
-document.getElementById('loadex').onclick=()=>{ loadHouse(EXAMPLE); document.getElementById('json').value=JSON.stringify(EXAMPLE,null,2); draw(); };
-
-function loadHouse(h){ const g=h.grid||{};
-  if(g.x_positions){ S.gx=g.x_positions.slice(); S.gy=g.y_positions.slice(); } else { S.pitch=g.pitch||910; S.gx=uniform(g.x_axes||14,S.pitch); S.gy=uniform(g.y_axes||11,S.pitch); }
-  S.pitch=g.pitch||910; if(h.datums)S.datums=Object.assign({},h.datums);
-  const it=t=>idxTok(t);
-  S.walls=(h.walls||[]).map(w=>({id:w.id||("W"+(++uid)),kind:w.kind||"outer",level:w.level||"1F",a:{i:it(w.from[0]),j:it(w.from[1])},b:{i:it(w.to[0]),j:it(w.to[1])},
-    thickness:w.thickness||(w.kind==="inner"?105:150),finish:w.finish||"",base:w.base||"1FL",h0:w.h0||0,top:w.top||"2F梁天端",h1:w.h1||0}));
-  S.openings=(h.openings||[]).map(o=>({id:o.id||("O"+(++uid)),host:o.host,level:o.level||"1F",at:{i:it(o.at[0]),j:it(o.at[1])},width:o.width||1650,sill:o.sill||400,head:o.head||2200,type:o.type||"window"}));
-  S.fittings=(h.fittings||[]).map(o=>({id:o.id||("K"+(++uid)),host:o.host,level:o.level||"1F",at:{i:it(o.at[0]),j:it(o.at[1])},width:o.width||1650,sill:o.sill||0,head:o.head||2000,type:o.type||"引戸"}));
-  S.floors=(h.floors||[]).map(f=>({id:f.id||("F"+(++uid)),level:f.level||"1F",finish:f.finish||"",pts:(f.boundary||[]).map(p=>({i:it(p[0]),j:it(p[1])}))}));
-  S.rooms=(h.rooms||[]).map(r=>({id:r.id||("R"+(++uid)),name:r.name||"室",level:r.level||"1F",pts:(r.boundary||[]).map(p=>({i:it(p[0]),j:it(p[1])}))}));
-  if(h.roof&&h.roof.outlines&&h.roof.outlines[0]){ const o=h.roof.outlines[0]; S.roof={type:o.type==='lean_to'?'gable':(o.type||'gable'),ridge:o.ridge?parseFloat(o.ridge.axis.slice(1)):7.5,pitch:o.pitch_deg||20,z:o.ridge?o.ridge.z:6960,ov:o.overhang||600,eq:o.equal_pitch!==false}; }
-  fit(); }
+document.getElementById('export').onclick=()=>{ syncPanelTo(); setv('json',JSON.stringify(buildHouse(),null,2)); };
+document.getElementById('copy').onclick=async()=>{ const t=document.getElementById('json'); if(!t.value)t.value=JSON.stringify(buildHouse(),null,2); t.select(); try{ await navigator.clipboard.writeText(t.value); }catch(e){ document.execCommand('copy'); } };
+document.getElementById('dl').onclick=()=>{ const b=new Blob([val('json')||JSON.stringify(buildHouse(),null,2)],{type:'application/json'}); const a=document.createElement('a'); a.href=URL.createObjectURL(b); a.download='house.json'; a.click(); };
+document.getElementById('import').onclick=()=>{ try{ loadHouse(JSON.parse(val('json'))); draw(); }catch(e){ toast('JSON解析失敗: '+e.message,3000); } };
+document.getElementById('clear').onclick=()=>{ if(confirm('全消去?')){ mut(); S.walls=[]; S.openings=[]; S.floors=[]; S.rooms=[]; cur.p1=null; cur.floorPts=null; clearSel(); draw(); } };
+document.getElementById('loadex').onclick=()=>{ loadHouse(EXAMPLE); setv('json',JSON.stringify(EXAMPLE,null,2)); draw(); };
+async function loadFromHash(){ const hp=new URLSearchParams(location.hash.slice(1));
+  try{ const src=hp.get('src'); if(src){ const h=await (await fetch(src,{cache:'no-store'})).json(); loadHouse(h); setv('json',JSON.stringify(h,null,2)); }
+       const ov=hp.get('ov'); if(ov){ REVIEW=await (await fetch(ov,{cache:'no-store'})).json(); }
+       resize(); fit(); draw(); }catch(e){ console.error(e); toast('読込失敗: '+e.message,4000); } }
 
 const EXAMPLE={ schema:"wood-house/0.2",units:"mm",grid:{pitch:910,x_axes:14,y_axes:11,origin:[0,0,0]},
   datums:DEF_DATUMS,
@@ -508,117 +776,107 @@ const EXAMPLE={ schema:"wood-house/0.2",units:"mm",grid:{pitch:910,x_axes:14,y_a
     {id:"R_hall",name:"ホール",level:"2F",boundary:[["X7","Y6"],["X14","Y6"],["X14","Y11"],["X7","Y11"]]} ],
   roof:{outlines:[{id:"母屋",type:"gable",boundary:[["X1","Y1"],["X14","Y1"],["X14","Y11"],["X1","Y11"]],overhang:600,ridge:{axis:"X7.5",z:6960},pitch_deg:22,equal_pitch:true}]} };
 
-window.getHouse=()=>buildHouse();
-loadHouse(EXAMPLE);   // 初期表示はサンプル住宅（全消去で空にできる）
-if(location.hash.indexOf('plan')>=0){ planView=true; const b=document.getElementById('btnplan'); b.textContent='編集'; b.classList.add('on'); document.getElementById('planpng').style.display='block'; }
-resize(); fit(); draw();
-if(location.hash.indexOf('3d')>=0){ setTimeout(()=>document.getElementById('btn3d').click(), 300); }
+loadHouse(EXAMPLE);   // 初期表示はサンプル住宅
+resize(); fit(); toolHint(); draw();
+if(document.fonts&&document.fonts.ready) document.fonts.ready.then(()=>draw());
+{ const hs=location.hash; const v=hs.match(/[#&](plan|secX|secY)\b/);
+  const go=()=>{ if(v) setView(v[1]);
+    const sid=new URLSearchParams(hs.slice(1)).get('sel'); if(sid){ const o=S.openings.find(x=>x.id===sid), w=S.walls.find(x=>x.id===sid), r=S.roofs.find(x=>x.id===sid), l=S.levels.find(x=>x.id===sid);
+      if(o) selectEl({type:'opening',o}); else if(w) selectEl({type:'wall',o:w}); else if(r) selectEl({type:'roof',o:r}); else if(l) selectEl({type:'level',o:l}); }
+    if(/[#&]3d\b/.test(hs)){ const t=setInterval(()=>{ if(window.__3dReady){ clearInterval(t); document.getElementById('btn3d').click(); } },100); } };
+  if(hs.indexOf('src=')>=0||hs.indexOf('ov=')>=0) loadFromHash().then(go); else go(); }
 </script>
 
 <script type="module">
 import * as THREE from 'three';
 import {OrbitControls} from 'https://unpkg.com/three@0.160.0/examples/jsm/controls/OrbitControls.js';
-const host=document.getElementById('three');
+const host=document.getElementById('three'), RK=window.RK;
 let renderer,scene,camP,camO,camera,controls,root,datumGrp,inited=false,mode='3d',lastH=null,vfloor='all';
 let labelEls=[],labelPos=[];
-function onResize(){ if(!renderer)return; renderer.setSize(innerWidth,innerHeight);
-  if(camP){camP.aspect=innerWidth/innerHeight;camP.updateProjectionMatrix();} if(mode!=='3d')applyOrtho(); }
+const COL={bg:0xF7F9F8,outer:0xE3E8E9,inner:0xCBD3D7,floor:0xE9EDED,roof:0x93A3AC,edge:0x262D35,win:0xB9C8D0,door:0x5C6873,fit:0xC9D2D6};
+function onResize(){ if(!renderer)return; renderer.setSize(innerWidth,innerHeight); if(camP){camP.aspect=innerWidth/innerHeight;camP.updateProjectionMatrix();} if(mode!=='3d')applyOrtho(); }
 addEventListener('resize',onResize);
 function setCam(c){ camera=c; if(controls)controls.dispose(); controls=new OrbitControls(camera,renderer.domElement); controls.enableDamping=true; }
-function init(){ renderer=new THREE.WebGLRenderer({antialias:true}); renderer.setPixelRatio(devicePixelRatio); renderer.setSize(innerWidth,innerHeight); host.appendChild(renderer.domElement);
-  scene=new THREE.Scene(); scene.background=new THREE.Color(0xaeb4ba);
-  camP=new THREE.PerspectiveCamera(45,innerWidth/innerHeight,50,900000);
-  camO=new THREE.OrthographicCamera(-1,1,1,-1,-200000,900000);
-  setCam(camP);
-  scene.add(new THREE.HemisphereLight(0xffffff,0x555560,1.15)); const dl=new THREE.DirectionalLight(0xffffff,1.0); dl.position.set(-1,2,1.3); scene.add(dl);
+function init(){ renderer=new THREE.WebGLRenderer({antialias:true,preserveDrawingBuffer:true}); renderer.setPixelRatio(devicePixelRatio); renderer.setSize(innerWidth,innerHeight); host.appendChild(renderer.domElement);
+  scene=new THREE.Scene(); scene.background=new THREE.Color(COL.bg);
+  camP=new THREE.PerspectiveCamera(45,innerWidth/innerHeight,50,900000); camO=new THREE.OrthographicCamera(-1,1,1,-1,-200000,900000); setCam(camP);
+  scene.add(new THREE.HemisphereLight(0xffffff,0x8a949a,1.2)); const dl=new THREE.DirectionalLight(0xffffff,0.9); dl.position.set(-1,2,1.3); scene.add(dl);
   root=new THREE.Group(); scene.add(root); datumGrp=new THREE.Group(); scene.add(datumGrp); inited=true; animate(); }
 function animate(){ if(!host.classList.contains('on'))return; requestAnimationFrame(animate); controls.update(); renderer.render(scene,camera); if(mode!=='3d')updateLabels(); }
-function axPos(arr,idx,p){ if(arr&&arr.length){ const lo=Math.max(0,Math.min(arr.length-1,Math.floor(idx))),hi=Math.max(0,Math.min(arr.length-1,Math.ceil(idx))); if(lo===hi)return arr[lo]; const f=idx-Math.floor(idx); return arr[lo]*(1-f)+arr[hi]*f; } return idx*(p||910); }
-function rp(t,g){ if(typeof t[0]==='string'){ const xi=parseFloat(t[0].slice(1))-1,yj=parseFloat(t[1].slice(1))-1; return [axPos(g.x_positions,xi,g.pitch),axPos(g.y_positions,yj,g.pitch)]; } return [t[0],t[1]]; }
-function roofZAt(h,x,y){ let best=null; if(h.roof&&h.roof.outlines){ for(const o of h.roof.outlines){ if(o.type!=='gable'||!o.ridge)continue;
-  const pts=o.boundary.map(p=>rp(p,h.grid)); const xs=pts.map(p=>p[0]),ys=pts.map(p=>p[1]); const ov=o.overhang||0;
-  const x0=Math.min(...xs)-ov,x1=Math.max(...xs)+ov,y0=Math.min(...ys)-ov,y1=Math.max(...ys)+ov;
-  if(x<x0-2||x>x1+2||y<y0-2||y>y1+2)continue;
-  const ri=parseFloat(o.ridge.axis.slice(1))-1; const rx=axPos(h.grid.x_positions,ri,h.grid.pitch); const t=Math.tan((o.pitch_deg||20)*Math.PI/180);
-  const z=x<=rx?o.ridge.z-t*(rx-x):o.ridge.z-t*(x-rx); best=best===null?z:Math.min(best,z); } } return best; }
-function wallMesh(a,b,z0,z1,th,color,isTop,h){ const dx=b[0]-a[0],dy=b[1]-a[1]; const len=Math.hypot(dx,dy); if(len<1)return null; const ux=dx/len,uy=dy/len; const nx=-uy,ny=ux;
-  const topAt=s=>{ const bx=a[0]+ux*s,by=a[1]+uy*s; let best=null;   // 板厚方向にも屋根高を取り最小＝屋根が必ず壁を覆う
-    for(const d of [-th/2,0,th/2]){ const rz=roofZAt(h,bx+nx*d,by+ny*d); const tv=(rz==null)?z1:(isTop?rz:Math.min(z1,rz)); best=(best==null)?tv:Math.min(best,tv); }
+const V=(x,y,z)=>new THREE.Vector3(x,z,-y);   // 建物座標 (x,y,z) → three (x,z,-y)
+function addEdges(mesh,op){ const e=new THREE.LineSegments(new THREE.EdgesGeometry(mesh.geometry,25),new THREE.LineBasicMaterial({color:COL.edge,transparent:true,opacity:op||.28}));
+  e.applyMatrix4(mesh.matrix); e.userData.lvl=mesh.userData.lvl; root.add(e); }
+function wallMesh(a,b,z0,z1,th,color,isTop,roofs){ const dx=b[0]-a[0],dy=b[1]-a[1],len=Math.hypot(dx,dy); if(len<1)return null; const ux=dx/len,uy=dy/len,nx=-uy,ny=ux;
+  const topAt=s=>{ const bx=a[0]+ux*s,by=a[1]+uy*s; let best=null;   // 板厚方向にも屋根高を取り最小＝屋根が壁を覆う
+    for(const d of [-th/2,0,th/2]){ const rz=RK.roofZ(roofs,bx+nx*d,by+ny*d); const tv=rz==null?z1:(isTop?rz:Math.min(z1,rz)); best=best==null?tv:Math.min(best,tv); }
     return Math.max(z0+20,best); };
-  // 屋根面と厳密一致させるため、棟(ridge)を横切る位置を折れ点に（面は区間内で線形＝完全一致）
-  const bps=[0,len];
-  if(h.roof&&h.roof.outlines){ for(const o of h.roof.outlines){ if(o.type!=='gable'||!o.ridge)continue;
-    const rx=axPos(h.grid.x_positions, parseFloat(o.ridge.axis.slice(1))-1, h.grid.pitch);
-    if(Math.abs(ux)>1e-6){ const s=(rx-a[0])/ux; if(s>1&&s<len-1)bps.push(s); } } }
-  bps.sort((p,q)=>p-q); const sh=new THREE.Shape(); sh.moveTo(0,z0); sh.lineTo(len,z0);
-  for(let k=bps.length-1;k>=0;k--){ sh.lineTo(bps[k],topAt(bps[k])); }
+  const bps=RK.breaks(roofs,a,b); const sh=new THREE.Shape(); sh.moveTo(0,z0); sh.lineTo(len,z0);
+  for(let k=bps.length-1;k>=0;k--) sh.lineTo(bps[k],topAt(bps[k]));
   const geo=new THREE.ExtrudeGeometry(sh,{depth:th,bevelEnabled:false});
-  const dir3=new THREE.Vector3(ux,0,-uy),up3=new THREE.Vector3(0,1,0); const perp3=new THREE.Vector3().crossVectors(dir3,up3).normalize();
+  const dir3=new THREE.Vector3(ux,0,-uy),up3=new THREE.Vector3(0,1,0),perp3=new THREE.Vector3().crossVectors(dir3,up3).normalize();
   const m=new THREE.Matrix4().makeBasis(dir3,up3,perp3); m.setPosition(a[0]-perp3.x*th/2,-perp3.y*th/2,-a[1]-perp3.z*th/2);
   geo.applyMatrix4(m); geo.computeVertexNormals(); return new THREE.Mesh(geo,new THREE.MeshLambertMaterial({color})); }
-function clearRoot(){ scene.remove(root); root.traverse(o=>{if(o.geometry)o.geometry.dispose(); if(o.material)o.material.dispose();}); root=new THREE.Group(); scene.add(root); }
-function panel(xa,za,xb,zb,y0,y1){ const gg=new THREE.BufferGeometry(); gg.setAttribute('position',new THREE.Float32BufferAttribute([xa,za,-y0,xb,zb,-y0,xb,zb,-y1,xa,za,-y1],3)); gg.setIndex([0,1,2,0,2,3]); gg.computeVertexNormals(); return new THREE.Mesh(gg,new THREE.MeshLambertMaterial({color:0x9a9a9f,side:THREE.DoubleSide})); }
-function zOf(h,name,off){ const d=h.datums||{}; return (d[name]!=null?d[name]:0)+(off||0); }
-function build(){ if(!inited)return; clearRoot(); const h=window.getHouse(); const g=h.grid; const lv={}; (h.levels||[]).forEach(l=>lv[l.id]=l);
-  const topLevel=(h.levels||[]).slice().sort((p,q)=>p.fl-q.fl).map(l=>l.id).pop()||'2F';
-  for(const w of (h.walls||[])){ const a=rp(w.from,g),b=rp(w.to,g);
-    let z0,z1; if(w.base&&h.datums){ z0=zOf(h,w.base,w.h0); z1=zOf(h,w.top,w.h1); } else { const L=lv[w.level]||{fl:0,cl:2500}; z0=L.fl; z1=L.cl; }
-    const th=w.thickness||(w.kind==='outer'?150:105); const isTop=w.level===topLevel;
-    const m=wallMesh(a,b,z0,z1,th,w.kind==='outer'?0xe2e2e0:0xc2c7cc,isTop,h); if(m){m.userData.lvl=w.level; root.add(m);} }
-  for(const f of (h.floors||[])){ const L=lv[f.level]||{fl:0}; const sh=new THREE.Shape(); (f.boundary||[]).forEach((p,i)=>{const q=rp(p,g); i?sh.lineTo(q[0],q[1]):sh.moveTo(q[0],q[1]);});
-    const m=new THREE.Mesh(new THREE.ShapeGeometry(sh),new THREE.MeshLambertMaterial({color:0xd6cfc2,side:THREE.DoubleSide})); m.rotation.x=-Math.PI/2; m.position.y=(L.fl||0)+2; m.userData.lvl=f.level; root.add(m); }
-  const drawOpen=(arr,col)=>{ for(const o of (arr||[])){ const w=(h.walls||[]).find(x=>x.id===o.host); if(!w)continue; const a=rp(w.from,g),b=rp(w.to,g); const ang=Math.atan2(b[1]-a[1],b[0]-a[0]); const at=rp(o.at,g);
-    const base=(w.base&&h.datums)?zOf(h,w.base,w.h0):((lv[o.level]||{fl:0}).fl);
-    let botA=base+(o.sill||0), topA=base+(o.head||2000);
-    // 開口も屋根で切断（妻側含む）: 開口幅全体で屋根高の最小を取り、それより上をカット
-    const _dx=b[0]-a[0],_dy=b[1]-a[1],_wl=Math.hypot(_dx,_dy)||1,_ux=_dx/_wl,_uy=_dy/_wl,_wd=o.width||1200;
-    let _rz=Infinity; for(const f of [-0.5,-0.25,0,0.25,0.5]){ const r=roofZAt(h,at[0]+_ux*_wd*f,at[1]+_uy*_wd*f); if(r!=null)_rz=Math.min(_rz,r); }
-    if(isFinite(_rz)&&_rz<topA) topA=Math.max(botA+50,_rz);
-    const H=Math.max(50,topA-botA), wd=o.width||1200, th=(w.thickness||150)+50;
-    const c = col!=null?col:(o.type==='door'?0x8a6b45:0x8fc3e6);
-    const m=new THREE.Mesh(new THREE.BoxGeometry(wd,H,th),new THREE.MeshLambertMaterial({color:c,transparent:true,opacity:.8}));
-    m.position.set(at[0], (topA+botA)/2, -at[1]); m.rotation.y=-ang; m.userData.lvl=o.level; root.add(m); } };
-  drawOpen(h.openings,null); drawOpen(h.fittings,0xc07a2b);
-  if(h.roof&&h.roof.outlines){ for(const o of h.roof.outlines){ if(o.type!=='gable'||!o.ridge)continue; const pts=(o.boundary||[]).map(p=>rp(p,g)); if(!pts.length)continue;
-    const xs=pts.map(p=>p[0]),ys=pts.map(p=>p[1]); const ov=o.overhang||0; const x0=Math.min(...xs)-ov,x1=Math.max(...xs)+ov,y0=Math.min(...ys)-ov,y1=Math.max(...ys)+ov;
-    const xp=g.x_positions,p=g.pitch||910; const ri=parseFloat(o.ridge.axis.slice(1))-1; const rx=xp?xp[Math.round(ri)]:ri*p; const rz=o.ridge.z; const t=Math.tan((o.pitch_deg||20)*Math.PI/180);
-    const pa=panel(x0,rz-t*(rx-x0),rx,rz,y0,y1),pb=panel(rx,rz,x1,rz-t*(x1-rx),y0,y1); pa.userData.lvl='roof'; pb.userData.lvl='roof'; root.add(pa); root.add(pb); } }
+function quad(p,color){ const g=new THREE.BufferGeometry(); const v=p.map(q=>V(q[0],q[1],q[2]));
+  g.setAttribute('position',new THREE.Float32BufferAttribute(v.flatMap(q=>[q.x,q.y,q.z]),3)); g.setIndex([0,1,2,0,2,3]); g.computeVertexNormals();
+  return new THREE.Mesh(g,new THREE.MeshLambertMaterial({color,side:THREE.DoubleSide})); }
+function clearRoot(){ scene.remove(root); root.traverse(o=>{ if(o.geometry)o.geometry.dispose(); if(o.material)o.material.dispose(); }); root=new THREE.Group(); scene.add(root); }
+function build(){ if(!inited)return; clearRoot(); const h=window.getHouse(); const roofs=(h.roof&&h.roof.outlines)||[]; const lv={}; (h.levels||[]).forEach(l=>lv[l.id]=l);
+  const wl=new Set((h.walls||[]).map(w=>w.level)); const tl=(h.levels||[]).filter(l=>wl.has(l.id)).sort((p,q)=>p.fl-q.fl); const topLevel=tl.length?tl[tl.length-1].id:null;
+  const dz=(n,off)=>(h.datums&&h.datums[n]!=null?h.datums[n]:0)+(+off||0);
+  const wz=w=>{ const L=lv[w.level]||{fl:0,cl:2400}; if(w.base&&h.datums&&h.datums[w.base]!=null) return [dz(w.base,w.h0),(h.datums[w.top]!=null?dz(w.top,w.h1):L.cl)]; return [L.fl,L.cl]; };
+  const thk=w=>(w.thickness&&typeof w.thickness==='object')?(+w.thickness.out||0)+(+w.thickness.in||0):(+w.thickness||(w.kind==='outer'?150:105));
+  for(const w of h.walls||[]){ const [z0,z1]=wz(w); const m=wallMesh(w.from,w.to,z0,z1,thk(w),w.kind==='outer'?COL.outer:COL.inner,w.level===topLevel,roofs);
+    if(m){ m.userData.lvl=w.level; root.add(m); addEdges(m); } }
+  for(const f of h.floors||[]){ const L=lv[f.level]||{fl:0}; const b=f.boundary||[]; if(b.length<3)continue; const sh=new THREE.Shape(); b.forEach((q,i)=>i?sh.lineTo(q[0],q[1]):sh.moveTo(q[0],q[1]));
+    const m=new THREE.Mesh(new THREE.ShapeGeometry(sh),new THREE.MeshLambertMaterial({color:COL.floor,side:THREE.DoubleSide})); m.rotation.x=-Math.PI/2; m.position.y=(L.fl||0)+2; m.userData.lvl=f.level; root.add(m); }
+  for(const o of h.openings||[]){ const w=(h.walls||[]).find(x=>x.id===o.host); if(!w)continue;
+    const A=o.from||o.at, B=o.to||o.at; if(!A)continue; const M=[(A[0]+B[0])/2,(A[1]+B[1])/2];
+    const dx=w.to[0]-w.from[0],dy=w.to[1]-w.from[1],wl_=Math.hypot(dx,dy)||1,ux=dx/wl_,uy=dy/wl_,ang=Math.atan2(dy,dx);
+    const base=(w.base&&h.datums&&h.datums[w.base]!=null)?wz(w)[0]:(lv[o.level]||{fl:0}).fl;
+    const wd=Math.max(10,+o.width||0); let bot=base+(+o.sill||0), top=base+(+o.head||2000);
+    let rz=Infinity; for(const f of [-0.5,-0.25,0,0.25,0.5]){ const r=RK.roofZ(roofs,M[0]+ux*wd*f,M[1]+uy*wd*f); if(r!=null)rz=Math.min(rz,r); }
+    if(isFinite(rz)&&rz<top) top=Math.max(bot+50,rz);
+    const c=o.type==='door'?COL.door:o.type==='fitting'?COL.fit:COL.win;
+    const m=new THREE.Mesh(new THREE.BoxGeometry(wd,Math.max(50,top-bot),thk(w)+40),new THREE.MeshLambertMaterial({color:c,transparent:true,opacity:.85}));
+    m.position.set(M[0],(top+bot)/2,-M[1]); m.rotation.y=ang; m.updateMatrix(); m.userData.lvl=o.level; root.add(m); }
+  for(const o of roofs){ const b=RK.bb(o); if(!b)continue; const ov=+o.overhang||0, ax=RK.slopeAlong(o), kn=RK.knots(o); if(!kn.length)continue;
+    const s0=(ax?b.y0:b.x0)-ov, s1=(ax?b.y1:b.x1)+ov, t0=(ax?b.x0:b.y0)-ov, t1=(ax?b.x1:b.y1)+ov;
+    const ss=[s0,...kn.map(k=>k.pos).filter(p=>p>s0&&p<s1),s1].sort((p,q)=>p-q);
+    const pt=(s,t)=>{ const x=ax?t:s, y=ax?s:t; return [x,y,RK.zAt(o,x,y)]; };
+    for(let i=0;i<ss.length-1;i++){ const m=quad([pt(ss[i],t0),pt(ss[i+1],t0),pt(ss[i+1],t1),pt(ss[i],t1)],COL.roof); m.userData.lvl='roof'; root.add(m); addEdges(m,.5); } }
   lastH=h; setMode(mode); setVFloor(vfloor); }
 function setVFloor(f){ vfloor=f; document.querySelectorAll('#vfloors button').forEach(b=>b.classList.toggle('on',b.dataset.f===f));
-  root.children.forEach(m=>{ const L=m.userData.lvl; if(f==='all')m.visible=true; else if(f==='1F')m.visible=(L==='1F'); else m.visible=(L!=='roof'); }); }
+  root.children.forEach(m=>{ const L=m.userData.lvl; m.visible= f==='all'?true : f==='1F'?(L==='1F') : (L!=='roof'); }); }
 function bbox(){ return new THREE.Box3().setFromObject(root); }
-function frame3D(){ const box=bbox(); if(box.isEmpty())return; const c=box.getCenter(new THREE.Vector3()),s=box.getSize(new THREE.Vector3()); const r=Math.max(s.x,s.y,s.z,3000);
+function frame3D(){ const box=bbox(); if(box.isEmpty())return; const c=box.getCenter(new THREE.Vector3()),s=box.getSize(new THREE.Vector3()),r=Math.max(s.x,s.y,s.z,3000);
   camP.position.set(c.x-r*1.1,c.y+r*0.85,c.z+r*1.25); camP.near=r/100; camP.far=r*20; camP.updateProjectionMatrix(); controls.target.copy(c); controls.update(); }
-function applyOrtho(){ const box=bbox(); if(box.isEmpty())return; const c=box.getCenter(new THREE.Vector3()),s=box.getSize(new THREE.Vector3()); const asp=innerWidth/innerHeight;
-  let hW=(mode==='elevX'?s.x:s.z), vH=s.y; hW=Math.max(hW,1000); vH=Math.max(vH,1000); let halfW=hW*0.62,halfH=vH*0.62; if(halfW/halfH<asp)halfW=halfH*asp; else halfH=halfW/asp;
-  camO.left=-halfW;camO.right=halfW;camO.top=halfH;camO.bottom=-halfH; const dist=Math.max(s.x,s.y,s.z)*3+20000;
+function applyOrtho(){ const box=bbox(); if(box.isEmpty())return; const c=box.getCenter(new THREE.Vector3()),s=box.getSize(new THREE.Vector3()),asp=innerWidth/innerHeight;
+  let hW=Math.max(mode==='elevX'?s.x:s.z,1000), vH=Math.max(s.y,1000); let halfW=hW*0.62,halfH=vH*0.62; if(halfW/halfH<asp)halfW=halfH*asp; else halfH=halfW/asp;
+  camO.left=-halfW; camO.right=halfW; camO.top=halfH; camO.bottom=-halfH; const dist=Math.max(s.x,s.y,s.z)*3+20000;
   if(mode==='elevX')camO.position.set(c.x,c.y,c.z+dist); else camO.position.set(c.x+dist,c.y,c.z);
-  camO.near=1;camO.far=dist*3;camO.up.set(0,1,0);camO.updateProjectionMatrix(); controls.target.copy(c);controls.update(); }
+  camO.near=1; camO.far=dist*3; camO.up.set(0,1,0); camO.updateProjectionMatrix(); controls.target.copy(c); controls.update(); }
 function rebuildDatums(){ datumGrp.clear(); labelEls.forEach(e=>e.remove()); labelEls=[]; labelPos=[];
-  if(mode==='3d'||!lastH||!lastH.datums)return; const box=bbox(); if(box.isEmpty())return; const mn=box.min,mx=box.max;
-  const mgx=(mx.x-mn.x)*0.10+600, mgz=(mx.z-mn.z)*0.10+600; const mat=new THREE.LineBasicMaterial({color:0x33506e});
-  const ds=Object.entries(lastH.datums).sort((a,b)=>a[1]-b[1]); const zlo=ds[0][1], zhi=ds[ds.length-1][1];
-  const lx=mn.x-mgx;              // X立面: 寸法は左側
-  // 縦の寸法基準線
-  if(mode==='elevX') datumGrp.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(lx,zlo,mx.z),new THREE.Vector3(lx,zhi,mx.z)]),mat));
-  else datumGrp.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(mn.x,zlo,mn.z-mgz),new THREE.Vector3(mn.x,zhi,mn.z-mgz)]),mat));
+  if(mode==='3d'||!lastH)return; const box=bbox(); if(box.isEmpty())return; const mn=box.min,mx=box.max;
+  const ds=[]; (lastH.levels||[]).forEach(l=>{ ds.push([l.id+' FL',+l.fl]); ds.push([l.id+' CL',+l.cl]); }); Object.entries(lastH.datums||{}).forEach(([k,v])=>ds.push([k,+v]));
+  if(!ds.length)return; ds.sort((a,b)=>a[1]-b[1]);
+  const mgx=(mx.x-mn.x)*0.10+600, mgz=(mx.z-mn.z)*0.10+600, mat=new THREE.LineBasicMaterial({color:0x93A3AC}), lx=mn.x-mgx;
   for(const [nm,z] of ds){ let pts,lp;
     if(mode==='elevX'){ pts=[new THREE.Vector3(lx,z,mx.z),new THREE.Vector3(mx.x+mgx*0.3,z,mx.z)]; lp=new THREE.Vector3(lx,z,mx.z); }
     else { pts=[new THREE.Vector3(mn.x,z,mn.z-mgz),new THREE.Vector3(mn.x,z,mx.z+mgz*0.3)]; lp=new THREE.Vector3(mn.x,z,mn.z-mgz); }
     datumGrp.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts),mat));
     const el=document.createElement('div'); el.className='dlab'; el.textContent=nm+' '+Math.round(z); host.appendChild(el); labelEls.push(el); labelPos.push(lp); } }
 function updateLabels(){ for(let i=0;i<labelEls.length;i++){ const v=labelPos[i].clone().project(camera);
-    if(v.z<-1||v.z>1){ labelEls[i].style.display='none'; continue; }
-    labelEls[i].style.display='block'; labelEls[i].style.left=((v.x*0.5+0.5)*innerWidth)+'px'; labelEls[i].style.top=((-v.y*0.5+0.5)*innerHeight)+'px'; } }
+  if(v.z<-1||v.z>1){ labelEls[i].style.display='none'; continue; }
+  labelEls[i].style.display='block'; labelEls[i].style.left=((v.x*0.5+0.5)*innerWidth)+'px'; labelEls[i].style.top=((-v.y*0.5+0.5)*innerHeight)+'px'; } }
 function setMode(m){ mode=m; document.querySelectorAll('#modes button').forEach(b=>b.classList.toggle('on',b.dataset.m===m));
-  if(m==='3d'){ setCam(camP); controls.enableRotate=true; datumGrp.visible=false; frame3D(); }
-  else { setCam(camO); controls.enableRotate=false; datumGrp.visible=true; applyOrtho(); }
+  if(m==='3d'){ setCam(camP); controls.enableRotate=true; datumGrp.visible=false; frame3D(); } else { setCam(camO); controls.enableRotate=false; datumGrp.visible=true; applyOrtho(); }
   rebuildDatums(); }
 document.getElementById('btn3d').onclick=()=>{ host.classList.add('on'); if(!inited)init(); onResize(); build(); animate(); };
 document.getElementById('c3d').onclick=()=>{ host.classList.remove('on'); labelEls.forEach(e=>e.style.display='none'); };
 document.getElementById('u3d').onclick=()=>build();
 document.querySelectorAll('#modes button').forEach(b=>b.onclick=()=>setMode(b.dataset.m));
 document.querySelectorAll('#vfloors button').forEach(b=>b.onclick=()=>setVFloor(b.dataset.f));
+window.__3dReady=true;
 </script>
 </body>
 </html>
