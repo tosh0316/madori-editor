@@ -82,6 +82,19 @@
   #three .tag{ position:fixed; bottom:14px; left:0; right:0; text-align:center; color:var(--sub); font-size:11px; }
   .dlab{ position:fixed; z-index:9; font-family:var(--mono); font-size:11px; color:var(--ink); background:var(--moon); padding:0 4px;
          transform:translateY(-50%); white-space:nowrap; pointer-events:none; display:none; }
+  /* モデル選択・保存オーバーレイ */
+  .overlay{ position:fixed; inset:0; z-index:20; display:flex; align-items:center; justify-content:center; }
+  #start{ background:var(--moon); }
+  #savepanel{ background:rgba(247,249,248,.92); display:none; }
+  #savepanel.on{ display:flex; }
+  .ocard{ width:min(92vw,380px); border:1px solid var(--rule); background:var(--moon); padding:36px 32px; }
+  .ocard h2{ font-family:var(--mincho); font-size:22px; font-weight:500; margin:0 0 4px; letter-spacing:.06em; }
+  .ocard .sub{ font-size:12px; color:var(--sub); margin:0 0 28px; letter-spacing:.02em; }
+  .mitem{ width:100%; text-align:left; padding:14px 16px; border:1px solid var(--rule); background:none; cursor:pointer;
+          font-size:13px; color:var(--ink); margin-bottom:8px; border-radius:2px; font-family:var(--sans); display:block; }
+  .mitem:hover{ background:var(--rule); }
+  .mitem .msub{ display:block; font-size:11px; color:var(--sub); margin-top:3px; font-weight:400; }
+  .ocard .or{ text-align:center; font-size:11px; color:var(--nezu); margin:14px 0; letter-spacing:.12em; }
 </style>
 </head>
 <body data-mode="edit">
@@ -97,6 +110,8 @@
   <button class="tb" id="planpng" hidden>PNG保存</button>
   <span class="sep"></span>
   <button class="tb" id="btn3d">3D</button>
+  <span class="sep"></span>
+  <button class="tb" id="btn_save">保存</button>
   <span id="stat"></span>
 </div>
 <div id="toast"></div>
@@ -115,6 +130,35 @@
 </div>
 
 <aside id="side"></aside>
+
+<!-- モデル選択 -->
+<div id="start" class="overlay">
+  <div class="ocard">
+    <h2>間取りエディタ</h2>
+    <p class="sub">wood-house / cotomos</p>
+    <button class="mitem" id="m_blank">新規（空）<span class="msub">910グリッドから始める</span></button>
+    <button class="mitem" id="m_example">サンプル住宅<span class="msub">2階建て・標準的な間取り例</span></button>
+    <button class="mitem" id="m_azumino">安曇野の家<span class="msub">実測データ 1F（wood-house/0.3）</span></button>
+    <p class="or">または</p>
+    <label class="mitem">JSONファイルを開く<span class="msub">house.json (wood-house v0.2/0.3)</span><input type="file" accept=".json" id="m_file" hidden></label>
+  </div>
+</div>
+
+<!-- 保存・push パネル -->
+<div id="savepanel" class="overlay">
+  <div class="ocard" style="width:min(92vw,360px)">
+    <h2 style="font-size:16px;margin-bottom:20px">保存 / push</h2>
+    <label class="f"><span>ファイル名</span><input id="sv_name" type="text" style="width:160px" placeholder="house.json"></label>
+    <label class="f" style="margin-top:4px"><span>GitHub Token</span><input id="sv_token" type="password" style="width:160px" placeholder="ghp_..."></label>
+    <p class="hint" style="margin-top:8px">Push先: tosh0316/madori-editor/models/（Token はローカルに保存）</p>
+    <div class="acts">
+      <button class="lnk" id="sv_dl">ダウンロード</button>
+      <button class="lnk" id="sv_push">GitHub push</button>
+      <button class="lnk del" id="sv_close">閉じる</button>
+    </div>
+    <p id="sv_msg" style="font-size:11px;color:var(--sub);margin-top:10px;min-height:1em"></p>
+  </div>
+</div>
 
 <div id="three">
   <div class="bar3">
@@ -781,15 +825,51 @@ const EXAMPLE={ schema:"wood-house/0.2",units:"mm",grid:{pitch:910,x_axes:14,y_a
     {id:"R_hall",name:"ホール",level:"2F",boundary:[["X7","Y6"],["X14","Y6"],["X14","Y11"],["X7","Y11"]]} ],
   roof:{outlines:[{id:"母屋",type:"gable",boundary:[["X1","Y1"],["X14","Y1"],["X14","Y11"],["X1","Y11"]],overhang:600,ridge:{axis:"X7.5",z:6960},pitch_deg:22,equal_pitch:true}]} };
 
-loadHouse(EXAMPLE);   // 初期表示はサンプル住宅
-resize(); fit(); toolHint(); draw();
-if(document.fonts&&document.fonts.ready) document.fonts.ready.then(()=>draw());
+// ---------- モデル選択 ----------
+const startEl=document.getElementById('start');
+function dismissStart(){ startEl.style.display='none'; resize(); fit(); toolHint(); draw(); }
+function openModel(h){ loadHouse(h); dismissStart(); }
+document.getElementById('m_blank').onclick=()=>{ openModel({schema:'wood-house/0.3',units:'mm',meta:{name:'新規'},
+  grid:{x:[...Array(14)].map((_,i)=>({label:'X'+(i+1),pos:i*910})),y:[...Array(11)].map((_,j)=>({label:'Y'+(j+1),pos:j*910}))},
+  levels:[{id:'1F',fl:600,cl:2900}]}); };
+document.getElementById('m_example').onclick=()=>openModel(EXAMPLE);
+document.getElementById('m_azumino').onclick=async()=>{ toast('読込中…');
+  try{ const h=await(await fetch('models/azumino.json',{cache:'no-store'})).json(); openModel(h); }
+  catch(e){ toast('読込失敗: '+e.message,3000); } };
+document.getElementById('m_file').onchange=e=>{ const f=e.target.files[0]; if(!f)return;
+  const r=new FileReader(); r.onload=ev=>{ try{ openModel(JSON.parse(ev.target.result)); }catch(ex){ toast('JSON解析失敗: '+ex.message,3000); } }; r.readAsText(f); };
+
+// ---------- 保存 / push ----------
+const saveEl=document.getElementById('savepanel');
+document.getElementById('btn_save').onclick=()=>{ document.getElementById('sv_name').value=(S.title||'house')+'.json';
+  document.getElementById('sv_msg').textContent=''; saveEl.classList.add('on'); };
+document.getElementById('sv_close').onclick=()=>saveEl.classList.remove('on');
+document.getElementById('sv_dl').onclick=()=>{ const j=buildHouse(),nm=document.getElementById('sv_name').value||'house.json';
+  const b=new Blob([JSON.stringify(j,null,2)],{type:'application/json'}); const a=document.createElement('a'); a.href=URL.createObjectURL(b); a.download=nm; a.click(); };
+document.getElementById('sv_push').onclick=async()=>{
+  const nm=document.getElementById('sv_name').value||'house.json', tok=document.getElementById('sv_token').value.trim(), msgEl=document.getElementById('sv_msg');
+  if(!tok){ msgEl.textContent='Token を入力してください'; return; }
+  localStorage.setItem('gh_token',tok); msgEl.textContent='pushing...';
+  try{ const j=buildHouse(), cnt=btoa(unescape(encodeURIComponent(JSON.stringify(j,null,2))));
+    const api='https://api.github.com/repos/tosh0316/madori-editor/contents/models/'+nm;
+    let sha; try{ sha=(await(await fetch(api,{headers:{Authorization:'token '+tok}})).json()).sha; }catch(e){}
+    const r=await fetch(api,{method:'PUT',headers:{Authorization:'token '+tok,'Content-Type':'application/json'},
+      body:JSON.stringify({message:'update '+nm,content:cnt,sha})});
+    msgEl.textContent=r.ok?'push 完了 ✓':'失敗: '+(await r.json()).message;
+  }catch(e){ msgEl.textContent='エラー: '+e.message; }
+};
+{ const t=localStorage.getItem('gh_token'); if(t)document.getElementById('sv_token').value=t; }
+
+resize(); toolHint();
+if(document.fonts&&document.fonts.ready) document.fonts.ready.then(()=>{});
 { const hs=location.hash; const v=hs.match(/[#&](plan|secX|secY)\b/);
   const go=()=>{ if(v) setView(v[1]);
     const sid=new URLSearchParams(hs.slice(1)).get('sel'); if(sid){ const o=S.openings.find(x=>x.id===sid), w=S.walls.find(x=>x.id===sid), r=S.roofs.find(x=>x.id===sid), l=S.levels.find(x=>x.id===sid);
       if(o) selectEl({type:'opening',o}); else if(w) selectEl({type:'wall',o:w}); else if(r) selectEl({type:'roof',o:r}); else if(l) selectEl({type:'level',o:l}); }
     if(/[#&]3d\b/.test(hs)){ const t=setInterval(()=>{ if(window.__3dReady){ clearInterval(t); document.getElementById('btn3d').click(); } },100); } };
-  if(hs.indexOf('src=')>=0||hs.indexOf('ov=')>=0) loadFromHash().then(go); else go(); }
+  if(hs.indexOf('src=')>=0||hs.indexOf('ov=')>=0){ startEl.style.display='none'; loadFromHash().then(go); }
+  else if(hs.indexOf('example')>=0){ openModel(EXAMPLE); }
+  else{ /* モデル選択画面を表示 */ } }
 </script>
 
 <script type="module">

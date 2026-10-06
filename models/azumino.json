@@ -1,0 +1,1884 @@
+{
+  "schema": "wood-house/0.3",
+  "units": "mm",
+  "meta": {
+    "rev": 0,
+    "migrated_from": "wood-house/0.2"
+  },
+  "site": {
+    "singleline_offset": [
+      -122627.448,
+      1484.121,
+      0
+    ],
+    "gl": null,
+    "note": "2D平面図(SingleLine)は建物座標に対し X-122627 / Y+1484 のオフセット。1FL天端=約Z600。"
+  },
+  "grid": {
+    "x": [
+      {
+        "label": "X1",
+        "pos": 0
+      },
+      {
+        "label": "X2",
+        "pos": 910
+      },
+      {
+        "label": "X3",
+        "pos": 1820
+      },
+      {
+        "label": "X4",
+        "pos": 2730
+      },
+      {
+        "label": "X5",
+        "pos": 3640
+      },
+      {
+        "label": "X6",
+        "pos": 4550
+      },
+      {
+        "label": "X7",
+        "pos": 5460
+      },
+      {
+        "label": "X8",
+        "pos": 6370
+      },
+      {
+        "label": "X9",
+        "pos": 7280
+      },
+      {
+        "label": "X10",
+        "pos": 8190
+      },
+      {
+        "label": "X11",
+        "pos": 9100
+      },
+      {
+        "label": "X12",
+        "pos": 10010
+      },
+      {
+        "label": "X13",
+        "pos": 10920
+      },
+      {
+        "label": "X14",
+        "pos": 11830
+      }
+    ],
+    "y": [
+      {
+        "label": "Y1",
+        "pos": 0
+      },
+      {
+        "label": "Y2",
+        "pos": 910
+      },
+      {
+        "label": "Y3",
+        "pos": 1820
+      },
+      {
+        "label": "Y4",
+        "pos": 2730
+      },
+      {
+        "label": "Y5",
+        "pos": 3640
+      },
+      {
+        "label": "Y6",
+        "pos": 4550
+      },
+      {
+        "label": "Y7",
+        "pos": 5460
+      },
+      {
+        "label": "Y8",
+        "pos": 6370
+      },
+      {
+        "label": "Y9",
+        "pos": 7280
+      },
+      {
+        "label": "Y10",
+        "pos": 8190
+      },
+      {
+        "label": "Y11",
+        "pos": 9100
+      }
+    ]
+  },
+  "levels": [
+    {
+      "id": "1F",
+      "fl": 600,
+      "cl": 2900
+    }
+  ],
+  "datums": {},
+  "walls": [
+    {
+      "id": "OW1-01",
+      "kind": "outer",
+      "level": "1F",
+      "from": [
+        0.0,
+        9100.0
+      ],
+      "to": [
+        0.0,
+        2730.0
+      ],
+      "thickness": {
+        "out": 75,
+        "in": 75
+      },
+      "structure": "耐力壁",
+      "faces": {
+        "ext": null,
+        "int": null
+      }
+    },
+    {
+      "id": "OW1-02",
+      "kind": "outer",
+      "level": "1F",
+      "from": [
+        0.0,
+        2730.0
+      ],
+      "to": [
+        4550.0,
+        2730.0
+      ],
+      "thickness": {
+        "out": 75,
+        "in": 75
+      },
+      "structure": "耐力壁",
+      "faces": {
+        "ext": null,
+        "int": null
+      }
+    },
+    {
+      "id": "OW1-03",
+      "kind": "outer",
+      "level": "1F",
+      "from": [
+        4550.0,
+        2730.0
+      ],
+      "to": [
+        4550.0,
+        0.0
+      ],
+      "thickness": {
+        "out": 75,
+        "in": 75
+      },
+      "structure": "耐力壁",
+      "faces": {
+        "ext": null,
+        "int": null
+      }
+    },
+    {
+      "id": "OW1-04",
+      "kind": "outer",
+      "level": "1F",
+      "from": [
+        11830.0,
+        0.0
+      ],
+      "to": [
+        11830.0,
+        9100.0
+      ],
+      "thickness": {
+        "out": 75,
+        "in": 75
+      },
+      "structure": "耐力壁",
+      "faces": {
+        "ext": null,
+        "int": null
+      }
+    },
+    {
+      "id": "OW1-05",
+      "kind": "outer",
+      "level": "1F",
+      "from": [
+        4550.0,
+        0.0
+      ],
+      "to": [
+        11830.0,
+        0.0
+      ],
+      "thickness": {
+        "out": 75,
+        "in": 75
+      },
+      "structure": "耐力壁",
+      "faces": {
+        "ext": null,
+        "int": null
+      }
+    },
+    {
+      "id": "OW1-06",
+      "kind": "outer",
+      "level": "1F",
+      "from": [
+        2730.0,
+        9100.0
+      ],
+      "to": [
+        0.0,
+        9100.0
+      ],
+      "thickness": {
+        "out": 75,
+        "in": 75
+      },
+      "structure": "耐力壁",
+      "faces": {
+        "ext": null,
+        "int": null
+      }
+    },
+    {
+      "id": "OW1-07",
+      "kind": "outer",
+      "level": "1F",
+      "from": [
+        11830.0,
+        9100.0
+      ],
+      "to": [
+        2730.0,
+        9100.0
+      ],
+      "thickness": {
+        "out": 75,
+        "in": 75
+      },
+      "structure": "耐力壁",
+      "faces": {
+        "ext": null,
+        "int": null
+      }
+    },
+    {
+      "id": "IW1-01",
+      "kind": "inner",
+      "level": "1F",
+      "from": [
+        7280.0,
+        6980.0
+      ],
+      "to": [
+        7280.0,
+        9100.0
+      ],
+      "thickness": {
+        "L": 52.5,
+        "R": 52.5
+      },
+      "structure": "間仕切",
+      "faces": {
+        "L": null,
+        "R": null
+      }
+    },
+    {
+      "id": "IW1-02",
+      "kind": "inner",
+      "level": "1F",
+      "from": [
+        10010.0,
+        7280.0
+      ],
+      "to": [
+        11830.0,
+        7280.0
+      ],
+      "thickness": {
+        "L": 52.5,
+        "R": 52.5
+      },
+      "structure": "間仕切",
+      "faces": {
+        "L": null,
+        "R": null
+      }
+    },
+    {
+      "id": "IW1-03",
+      "kind": "inner",
+      "level": "1F",
+      "from": [
+        8190.0,
+        0.0
+      ],
+      "to": [
+        8190.0,
+        2730.0
+      ],
+      "thickness": {
+        "L": 52.5,
+        "R": 52.5
+      },
+      "structure": "間仕切",
+      "faces": {
+        "L": null,
+        "R": null
+      }
+    },
+    {
+      "id": "IW1-04",
+      "kind": "inner",
+      "level": "1F",
+      "from": [
+        4550.0,
+        6980.0
+      ],
+      "to": [
+        10010.0,
+        6980.0
+      ],
+      "thickness": {
+        "L": 52.5,
+        "R": 52.5
+      },
+      "structure": "間仕切",
+      "faces": {
+        "L": null,
+        "R": null
+      }
+    },
+    {
+      "id": "IW1-05",
+      "kind": "inner",
+      "level": "1F",
+      "from": [
+        4550.0,
+        6980.0
+      ],
+      "to": [
+        4550.0,
+        9100.0
+      ],
+      "thickness": {
+        "L": 52.5,
+        "R": 52.5
+      },
+      "structure": "間仕切",
+      "faces": {
+        "L": null,
+        "R": null
+      }
+    },
+    {
+      "id": "IW1-06",
+      "kind": "inner",
+      "level": "1F",
+      "from": [
+        7280.0,
+        2730.0
+      ],
+      "to": [
+        8190.0,
+        2730.0
+      ],
+      "thickness": {
+        "L": 52.5,
+        "R": 52.5
+      },
+      "structure": "間仕切",
+      "faces": {
+        "L": null,
+        "R": null
+      }
+    },
+    {
+      "id": "IW1-07",
+      "kind": "inner",
+      "level": "1F",
+      "from": [
+        7580.0,
+        0.0
+      ],
+      "to": [
+        7580.0,
+        2730.0
+      ],
+      "thickness": {
+        "L": 52.5,
+        "R": 52.5
+      },
+      "structure": "間仕切",
+      "faces": {
+        "L": null,
+        "R": null
+      }
+    },
+    {
+      "id": "IW1-08",
+      "kind": "inner",
+      "level": "1F",
+      "from": [
+        0.0,
+        6980.0
+      ],
+      "to": [
+        4550.0,
+        6980.0
+      ],
+      "thickness": {
+        "L": 52.5,
+        "R": 52.5
+      },
+      "structure": "間仕切",
+      "faces": {
+        "L": null,
+        "R": null
+      }
+    },
+    {
+      "id": "IW1-09",
+      "kind": "inner",
+      "level": "1F",
+      "from": [
+        2730.0,
+        6980.0
+      ],
+      "to": [
+        2730.0,
+        9100.0
+      ],
+      "thickness": {
+        "L": 52.5,
+        "R": 52.5
+      },
+      "structure": "間仕切",
+      "faces": {
+        "L": null,
+        "R": null
+      }
+    },
+    {
+      "id": "IW1-10",
+      "kind": "inner",
+      "level": "1F",
+      "from": [
+        11830.0,
+        3640.0
+      ],
+      "to": [
+        11830.0,
+        5160.0
+      ],
+      "thickness": {
+        "L": 52.5,
+        "R": 52.5
+      },
+      "structure": "間仕切",
+      "faces": {
+        "L": null,
+        "R": null
+      }
+    },
+    {
+      "id": "IW1-11",
+      "kind": "inner",
+      "level": "1F",
+      "from": [
+        8701.2,
+        3640.0
+      ],
+      "to": [
+        11830.0,
+        3640.0
+      ],
+      "thickness": {
+        "L": 52.5,
+        "R": 52.5
+      },
+      "structure": "間仕切",
+      "faces": {
+        "L": null,
+        "R": null
+      }
+    },
+    {
+      "id": "IW1-12",
+      "kind": "inner",
+      "level": "1F",
+      "from": [
+        10010.0,
+        6070.0
+      ],
+      "to": [
+        10010.0,
+        9100.0
+      ],
+      "thickness": {
+        "L": 52.5,
+        "R": 52.5
+      },
+      "structure": "間仕切",
+      "faces": {
+        "L": null,
+        "R": null
+      }
+    },
+    {
+      "id": "IW1-13",
+      "kind": "inner",
+      "level": "1F",
+      "from": [
+        10010.0,
+        6070.0
+      ],
+      "to": [
+        11830.0,
+        6070.0
+      ],
+      "thickness": {
+        "L": 52.5,
+        "R": 52.5
+      },
+      "structure": "間仕切",
+      "faces": {
+        "L": null,
+        "R": null
+      }
+    },
+    {
+      "id": "IW1-14",
+      "kind": "inner",
+      "level": "1F",
+      "from": [
+        9555.0,
+        4860.0
+      ],
+      "to": [
+        10010.0,
+        4860.0
+      ],
+      "thickness": {
+        "L": 52.5,
+        "R": 52.5
+      },
+      "structure": "間仕切",
+      "faces": {
+        "L": null,
+        "R": null
+      }
+    },
+    {
+      "id": "IW1-15",
+      "kind": "inner",
+      "level": "1F",
+      "from": [
+        8190.0,
+        2730.0
+      ],
+      "to": [
+        9555.0,
+        4860.0
+      ],
+      "thickness": {
+        "L": 52.5,
+        "R": 52.5
+      },
+      "structure": "間仕切",
+      "faces": {
+        "L": null,
+        "R": null
+      }
+    }
+  ],
+  "rooms": [
+    {
+      "id": "genkan",
+      "name": "玄関",
+      "level": "1F",
+      "boundary": null,
+      "label_at": [
+        3640,
+        8190
+      ],
+      "finish": {
+        "floor": "F3",
+        "wall": "W1",
+        "ceiling": "C1"
+      },
+      "note": "土間",
+      "area_m2": 3.31
+    },
+    {
+      "id": "syuno",
+      "name": "収納",
+      "level": "1F",
+      "boundary": null,
+      "label_at": [
+        1365,
+        8190
+      ],
+      "finish": {
+        "floor": "F3",
+        "wall": "W1",
+        "ceiling": "C2"
+      },
+      "note": "土間タイル。旧称『納戸』",
+      "area_m2": 4.97
+    },
+    {
+      "id": "ldk",
+      "name": "LDK",
+      "level": "1F",
+      "boundary": null,
+      "label_at": [
+        5574,
+        4425
+      ],
+      "finish": {
+        "floor": "F1",
+        "wall": "W1",
+        "ceiling": "C1"
+      },
+      "note": "キッチン壁W2/小下がりF2畳/暖炉前F3タイル/フリースペース/洗面(廊下)を含む大空間",
+      "area_m2": 57.43
+    },
+    {
+      "id": "wic",
+      "name": "WIC",
+      "level": "1F",
+      "boundary": null,
+      "label_at": [
+        5915,
+        8040
+      ],
+      "finish": {
+        "floor": "F1",
+        "wall": "W1",
+        "ceiling": "C2"
+      },
+      "note": "",
+      "area_m2": 5.79
+    },
+    {
+      "id": "datsui",
+      "name": "脱衣洗濯室",
+      "level": "1F",
+      "boundary": null,
+      "label_at": [
+        8645,
+        8040
+      ],
+      "finish": {
+        "floor": "F1",
+        "wall": "W1",
+        "ceiling": "C2"
+      },
+      "note": "床は主室と一続き。防水要検討",
+      "area_m2": 5.79
+    },
+    {
+      "id": "shinshitsu",
+      "name": "寝室",
+      "level": "1F",
+      "boundary": null,
+      "label_at": [
+        10045,
+        1788
+      ],
+      "finish": {
+        "floor": "F1",
+        "wall": "W1",
+        "ceiling": "C1"
+      },
+      "note": "",
+      "area_m2": 12.97
+    },
+    {
+      "id": "yokushitsu",
+      "name": "浴室",
+      "level": "1F",
+      "boundary": null,
+      "label_at": [
+        10920,
+        8190
+      ],
+      "finish": {
+        "floor": "UB",
+        "wall": "UB",
+        "ceiling": "UB"
+      },
+      "note": "ユニットバス",
+      "area_m2": 3.31
+    },
+    {
+      "id": "toilet",
+      "name": "トイレ",
+      "level": "1F",
+      "boundary": null,
+      "label_at": [
+        11375,
+        4550
+      ],
+      "finish": {
+        "floor": "F1",
+        "wall": "W1",
+        "ceiling": "C2"
+      },
+      "note": "",
+      "area_m2": 1.66
+    },
+    {
+      "id": "koshitsu1",
+      "name": "個室1",
+      "level": "2F",
+      "boundary": null,
+      "label_at": null,
+      "finish": {
+        "floor": "F1",
+        "wall": "W1",
+        "ceiling": "C1"
+      },
+      "note": "将来2階（Z3110床）",
+      "area_m2": 9.94
+    },
+    {
+      "id": "koshitsu2",
+      "name": "個室2",
+      "level": "2F",
+      "boundary": null,
+      "label_at": null,
+      "finish": {
+        "floor": "F1",
+        "wall": "W1",
+        "ceiling": "C1"
+      },
+      "note": "将来2階",
+      "area_m2": 9.94
+    }
+  ],
+  "opening_rules": {
+    "deduct": {
+      "window": 130,
+      "door": 40,
+      "fitting": 0
+    },
+    "note": "開口は単線 from→to（通り芯の交点〜交点）＋実開口幅 width。width は単線の中点に振り分けで置く。新規の width 既定 = 単線長 − deduct[type]"
+  },
+  "openings": [
+    {
+      "id": "WW-01",
+      "type": "window",
+      "host": "OW1-02",
+      "level": "1F",
+      "width": 2100,
+      "sill": -29,
+      "head": 1971,
+      "product": "SASH-W",
+      "operation": "要確認(モデルFIX)",
+      "facade": "S",
+      "room": "ldk",
+      "note": "LDK南面・掃き出し/テラス窓",
+      "_v02_model_id": "W05",
+      "from": [
+        2275,
+        2730
+      ],
+      "to": [
+        4550,
+        2730
+      ]
+    },
+    {
+      "id": "WW-02",
+      "type": "window",
+      "host": "OW1-03",
+      "level": "1F",
+      "width": 1690,
+      "sill": 70,
+      "head": 1760,
+      "product": "SASH-W",
+      "operation": "要確認(FIX)",
+      "facade": "S",
+      "room": "ldk",
+      "note": "LDK南面",
+      "_v02_model_id": "W01",
+      "from": [
+        4550,
+        1820
+      ],
+      "to": [
+        4550,
+        0
+      ]
+    },
+    {
+      "id": "WW-03",
+      "type": "window",
+      "host": "OW1-05",
+      "level": "1F",
+      "width": 1690,
+      "sill": 70,
+      "head": 1760,
+      "product": "SASH-W",
+      "operation": "要確認(FIX)",
+      "facade": "S",
+      "room": "ldk",
+      "note": "LDK南面",
+      "_v02_model_id": "W02",
+      "from": [
+        4550,
+        0
+      ],
+      "to": [
+        6370,
+        0
+      ]
+    },
+    {
+      "id": "AW-02",
+      "type": "window",
+      "host": "OW1-05",
+      "level": "1F",
+      "width": 350,
+      "sill": 670,
+      "head": 1870,
+      "product": "SASH-AL",
+      "operation": "要確認(FIX)",
+      "facade": "S",
+      "room": "shinshitsu",
+      "note": "スリット窓",
+      "from": [
+        8190,
+        0
+      ],
+      "to": [
+        9100,
+        0
+      ]
+    },
+    {
+      "id": "AW-03",
+      "type": "window",
+      "host": "OW1-05",
+      "level": "1F",
+      "width": 350,
+      "sill": 670,
+      "head": 1870,
+      "product": "SASH-AL",
+      "operation": "要確認(FIX)",
+      "facade": "S",
+      "room": "shinshitsu",
+      "note": "スリット窓",
+      "from": [
+        10920,
+        0
+      ],
+      "to": [
+        11830,
+        0
+      ]
+    },
+    {
+      "id": "AW-04",
+      "type": "window",
+      "host": "OW1-04",
+      "level": "1F",
+      "width": 1690,
+      "sill": 1470,
+      "head": 2240,
+      "product": "SASH-AL",
+      "operation": "要確認(FIX)",
+      "facade": "E",
+      "room": "shinshitsu",
+      "note": "",
+      "_v02_model_id": "W04",
+      "from": [
+        11830,
+        910
+      ],
+      "to": [
+        11830,
+        2730
+      ]
+    },
+    {
+      "id": "AW-06",
+      "type": "window",
+      "host": "OW1-04",
+      "level": "1F",
+      "width": 780,
+      "sill": 1770,
+      "head": 2140,
+      "product": "SASH-AL",
+      "operation": "要確認(FIX)",
+      "facade": "E",
+      "room": "toilet",
+      "note": "小窓",
+      "from": [
+        11830,
+        3640
+      ],
+      "to": [
+        11830,
+        4550
+      ]
+    },
+    {
+      "id": "AW-07",
+      "type": "window",
+      "host": "OW1-04",
+      "level": "1F",
+      "width": 780,
+      "sill": 3380,
+      "head": 4580,
+      "product": "SASH-AL",
+      "operation": "要確認(FIX)",
+      "facade": "E",
+      "room": "toilet",
+      "note": "高所窓/2階レベル",
+      "from": [
+        11830,
+        4550
+      ],
+      "to": [
+        11830,
+        5460
+      ]
+    },
+    {
+      "id": "AW-08",
+      "type": "window",
+      "host": "OW1-04",
+      "level": "1F",
+      "width": 780,
+      "sill": 970,
+      "head": 1740,
+      "product": "SASH-AL",
+      "operation": "要確認(FIX)",
+      "facade": "E",
+      "room": "toilet",
+      "note": "",
+      "from": [
+        11830,
+        5460
+      ],
+      "to": [
+        11830,
+        6370
+      ]
+    },
+    {
+      "id": "AW-09",
+      "type": "window",
+      "host": "OW1-04",
+      "level": "1F",
+      "width": 780,
+      "sill": 3280,
+      "head": 4480,
+      "product": "SASH-AL",
+      "operation": "要確認(FIX)",
+      "facade": "E",
+      "room": "yokushitsu",
+      "note": "高所窓/2階レベル。UB取合い要確認",
+      "from": [
+        11830,
+        7280
+      ],
+      "to": [
+        11830,
+        8190
+      ]
+    },
+    {
+      "id": "AW-10",
+      "type": "window",
+      "host": "OW1-06",
+      "level": "1F",
+      "width": 570,
+      "sill": 170,
+      "head": 2170,
+      "product": "SASH-AL",
+      "operation": "要確認(FIX)",
+      "facade": "N",
+      "room": "syuno",
+      "note": "縦長窓",
+      "_v02_model_id": "W06",
+      "from": [
+        2730,
+        9100
+      ],
+      "to": [
+        2120,
+        9100
+      ]
+    },
+    {
+      "id": "GD-01",
+      "type": "door",
+      "host": "OW1-07",
+      "level": "1F",
+      "width": 871,
+      "sill": -73,
+      "head": 1936,
+      "product": "DOOR-ENT",
+      "operation": "開き戸",
+      "facade": "N",
+      "room": "genkan",
+      "note": "玄関ドア（リジェーロα）",
+      "_v02_model_id": "D01",
+      "from": [
+        3640,
+        9100
+      ],
+      "to": [
+        2730,
+        9100
+      ]
+    },
+    {
+      "id": "AW-11",
+      "type": "window",
+      "host": "OW1-07",
+      "level": "1F",
+      "width": 1690,
+      "sill": 2580,
+      "head": 3150,
+      "product": "SASH-AL",
+      "operation": "要確認(FIX)",
+      "facade": "N",
+      "room": "genkan",
+      "note": "高所窓/2階レベル",
+      "from": [
+        4550,
+        9100
+      ],
+      "to": [
+        2730,
+        9100
+      ]
+    },
+    {
+      "id": "AW-12",
+      "type": "window",
+      "host": "OW1-07",
+      "level": "1F",
+      "width": 780,
+      "sill": 3480,
+      "head": 4680,
+      "product": "SASH-AL",
+      "operation": "要確認(FIX)",
+      "facade": "N",
+      "room": "wic",
+      "note": "高所窓/2階レベル",
+      "from": [
+        6370,
+        9100
+      ],
+      "to": [
+        5460,
+        9100
+      ]
+    },
+    {
+      "id": "AW-13",
+      "type": "window",
+      "host": "OW1-07",
+      "level": "1F",
+      "width": 1690,
+      "sill": 1770,
+      "head": 2270,
+      "product": "SASH-AL",
+      "operation": "要確認(FIX)",
+      "facade": "N",
+      "room": "wic",
+      "note": "",
+      "from": [
+        7280,
+        9100
+      ],
+      "to": [
+        5460,
+        9100
+      ]
+    },
+    {
+      "id": "AW-14",
+      "type": "window",
+      "host": "OW1-07",
+      "level": "1F",
+      "width": 780,
+      "sill": 3380,
+      "head": 4580,
+      "product": "SASH-AL",
+      "operation": "要確認(FIX)",
+      "facade": "N",
+      "room": "datsui",
+      "note": "高所窓/2階レベル",
+      "_review": "単線（交点〜交点）を幅から推定したが端が通り芯に乗らない",
+      "from": [
+        8645,
+        9100
+      ],
+      "to": [
+        7735,
+        9100
+      ]
+    },
+    {
+      "id": "AW-15",
+      "type": "window",
+      "host": "OW1-07",
+      "level": "1F",
+      "width": 1690,
+      "sill": 1770,
+      "head": 2270,
+      "product": "SASH-AL",
+      "operation": "要確認(FIX)",
+      "facade": "N",
+      "room": "datsui",
+      "note": "",
+      "_v02_model_id": "W03",
+      "from": [
+        10010,
+        9100
+      ],
+      "to": [
+        8190,
+        9100
+      ]
+    },
+    {
+      "id": "AW-16",
+      "type": "window",
+      "host": "OW1-02",
+      "level": "1F",
+      "width": 480,
+      "sill": 1070,
+      "head": 1740,
+      "product": "SASH-AL",
+      "operation": "要確認(FIX)",
+      "facade": "W",
+      "room": "ldk",
+      "note": "小窓",
+      "_review": "単線（交点〜交点）を幅から推定したが端が通り芯に乗らない",
+      "from": [
+        1520,
+        2730
+      ],
+      "to": [
+        2430,
+        2730
+      ]
+    },
+    {
+      "id": "AW-17",
+      "type": "window",
+      "host": "OW1-01",
+      "level": "1F",
+      "width": 1690,
+      "sill": 1270,
+      "head": 1740,
+      "product": "SASH-AL",
+      "operation": "要確認(FIX)",
+      "facade": "W",
+      "room": "syuno",
+      "note": "地窓/横長",
+      "from": [
+        0,
+        6370
+      ],
+      "to": [
+        0,
+        4550
+      ]
+    }
+  ],
+  "floors": [
+    {
+      "id": "FL1-01",
+      "level": "1F",
+      "room": null,
+      "boundary": [
+        [
+          10010.0,
+          9100.0
+        ],
+        [
+          10010.0,
+          7280.0
+        ],
+        [
+          11830.0,
+          7280.0
+        ],
+        [
+          11830.0,
+          9100.0
+        ],
+        [
+          10010.0,
+          9100.0
+        ]
+      ],
+      "finish": null
+    },
+    {
+      "id": "FL1-02",
+      "level": "1F",
+      "room": null,
+      "boundary": [
+        [
+          4550.0,
+          2730.0
+        ],
+        [
+          4550.0,
+          0.0
+        ],
+        [
+          8190.0,
+          0.0
+        ],
+        [
+          8190.0,
+          2730.0
+        ],
+        [
+          4550.0,
+          2730.0
+        ]
+      ],
+      "finish": null
+    },
+    {
+      "id": "FL1-03",
+      "level": "1F",
+      "room": null,
+      "boundary": [
+        [
+          0.0,
+          9100.0
+        ],
+        [
+          0.0,
+          6980.0
+        ],
+        [
+          2730.0,
+          6980.0
+        ],
+        [
+          2730.0,
+          8190.0
+        ],
+        [
+          4550.0,
+          8190.0
+        ],
+        [
+          4550.0,
+          9100.0
+        ],
+        [
+          0.0,
+          9100.0
+        ]
+      ],
+      "finish": null
+    },
+    {
+      "id": "FL1-04",
+      "level": "1F",
+      "room": null,
+      "boundary": [
+        [
+          0.0,
+          6980.0
+        ],
+        [
+          0.0,
+          2730.0
+        ],
+        [
+          4550.0,
+          2730.0
+        ],
+        [
+          8190.0,
+          2730.0
+        ],
+        [
+          8190.0,
+          0.0
+        ],
+        [
+          11830.0,
+          0.0
+        ],
+        [
+          11830.0,
+          7280.0
+        ],
+        [
+          10010.0,
+          7280.0
+        ],
+        [
+          10010.0,
+          9100.0
+        ],
+        [
+          4550.0,
+          9100.0
+        ],
+        [
+          4550.0,
+          8190.0
+        ],
+        [
+          2730.0,
+          8190.0
+        ],
+        [
+          2730.0,
+          6980.0
+        ],
+        [
+          0.0,
+          6980.0
+        ]
+      ],
+      "finish": null
+    }
+  ],
+  "ceilings": [],
+  "roof": {
+    "outlines": [
+      {
+        "id": "母屋",
+        "type": "gable",
+        "boundary": [
+          [
+            0.0,
+            920.0
+          ],
+          [
+            13043.0,
+            920.0
+          ],
+          [
+            13043.0,
+            9100.0
+          ],
+          [
+            0.0,
+            9100.0
+          ],
+          [
+            0.0,
+            920.0
+          ]
+        ],
+        "overhang": 600,
+        "finish": "R1",
+        "thickness": null,
+        "_v02": {
+          "ridge": {
+            "axis": "X8.16648",
+            "z": 6232
+          },
+          "pitch_deg": 11.2,
+          "equal_pitch": true,
+          "eave_h0": [
+            0,
+            0
+          ]
+        },
+        "axis": "y",
+        "ridge": {
+          "pos": 6521.5,
+          "z": 6232
+        },
+        "eaves": [
+          {
+            "pos": 0,
+            "z": 4940.7
+          },
+          {
+            "pos": 13043,
+            "z": 4940.7
+          }
+        ],
+        "_review": "旧形式から換算: 棟 y→X8.16648=6521.5、軒高は勾配11.2°から逆算"
+      },
+      {
+        "id": "下屋1",
+        "type": "lean_to",
+        "boundary": [
+          [
+            2736.0,
+            -1810.0
+          ],
+          [
+            13043.0,
+            -1810.0
+          ],
+          [
+            13043.0,
+            1680.0
+          ],
+          [
+            2736.0,
+            1680.0
+          ],
+          [
+            2736.0,
+            -1810.0
+          ]
+        ],
+        "overhang": 600,
+        "finish": "R1",
+        "thickness": null,
+        "_v02": {
+          "pitch_ratio": 0.1,
+          "eave_z": 3080
+        },
+        "axis": "x",
+        "eaves": [
+          {
+            "pos": -1810,
+            "z": 3080
+          }
+        ],
+        "ridge": {
+          "pos": 1680,
+          "z": 3429
+        },
+        "_review": "旧形式から換算: 軒を y 最小側(-1810)と仮定、棟高は勾配0.1から逆算"
+      }
+    ]
+  },
+  "equipment": [],
+  "circuits": [],
+  "finishes": {
+    "R1": {
+      "part": "屋根",
+      "name": "ガルバリウム鋼板 立平葺き",
+      "spec": "ガルバリウム鋼板 立平葺き",
+      "render": {
+        "material": "metal_galv",
+        "color": [
+          90,
+          90,
+          95
+        ]
+      },
+      "note": "下地・ルーフィング別途。断熱HI"
+    },
+    "OW1": {
+      "part": "外壁",
+      "name": "クヌギ・コナラ 耳付き板張り＋赤松(松枯れ材)",
+      "spec": "クヌギ・コナラ 耳付き板張り＋赤松(松枯れ材)",
+      "render": null,
+      "note": "敷地材・耳付き・暴れを意匠化"
+    },
+    "OW2": {
+      "part": "外壁",
+      "name": "土壁（外部・敷地の土＋石灰）",
+      "spec": "土壁（外部・敷地の土＋石灰）",
+      "render": null,
+      "note": ""
+    },
+    "NT1": {
+      "part": "軒天",
+      "name": "アカマツ 板張り",
+      "spec": "アカマツ 板張り",
+      "render": null,
+      "note": "敷地材"
+    },
+    "F1": {
+      "part": "床",
+      "name": "地域の赤松 無垢フローリング",
+      "spec": "地域の赤松 無垢フローリング",
+      "render": {
+        "material": "wood_oak",
+        "texture": "assets/tex/oak.jpg"
+      },
+      "note": "一部クヌギ・蓄熱。水回りまで一続き"
+    },
+    "F2": {
+      "part": "床",
+      "name": "畳",
+      "spec": "畳",
+      "render": null,
+      "note": "小下がり部分"
+    },
+    "F3": {
+      "part": "床",
+      "name": "タイル",
+      "spec": "タイル",
+      "render": null,
+      "note": "玄関土間・収納・暖炉前"
+    },
+    "W1": {
+      "part": "内壁",
+      "name": "土壁（敷地の土＋石灰／塗り・吹付）",
+      "spec": "土壁（敷地の土＋石灰／塗り・吹付）",
+      "render": null,
+      "note": "調湿・蓄熱"
+    },
+    "W2": {
+      "part": "内壁",
+      "name": "タイル",
+      "spec": "タイル",
+      "render": null,
+      "note": "キッチン壁"
+    },
+    "C1": {
+      "part": "天井",
+      "name": "麻布張り",
+      "spec": "麻布張り",
+      "render": null,
+      "note": "居室系"
+    },
+    "C2": {
+      "part": "天井",
+      "name": "アカマツ 荒板張り",
+      "spec": "アカマツ 荒板張り",
+      "render": null,
+      "note": "収納・水回り。要検討（耐湿樹種/左官も候補）"
+    },
+    "UB": {
+      "part": "設備",
+      "name": "ユニットバス（床・壁・天井一体）",
+      "spec": "ユニットバス（床・壁・天井一体）",
+      "render": null,
+      "note": "浴室"
+    },
+    "HI": {
+      "part": "断熱",
+      "name": "もみ殻（石灰＋不織布袋）",
+      "spec": "もみ殻（石灰＋不織布袋）",
+      "render": null,
+      "note": "屋根・外壁・床に充填"
+    }
+  },
+  "finish_defaults": {
+    "屋根": "R1",
+    "外壁": "OW1",
+    "軒天": "NT1"
+  },
+  "insulation": [
+    {
+      "part": "屋根",
+      "finish": "HI",
+      "spec": "もみ殻（石灰＋不織布袋）充填",
+      "note": "周り縁点検口で追充填可"
+    },
+    {
+      "part": "外壁",
+      "finish": "HI",
+      "spec": "もみ殻（石灰＋不織布袋）柱間充填",
+      "note": ""
+    },
+    {
+      "part": "床",
+      "finish": "HI",
+      "spec": "もみ殻（石灰＋不織布袋）充填",
+      "note": ""
+    }
+  ],
+  "products": {
+    "SASH-W": {
+      "cat": "sash",
+      "material": "木製"
+    },
+    "SASH-AL": {
+      "cat": "sash",
+      "material": "アルミ"
+    },
+    "DOOR-ENT": {
+      "cat": "door",
+      "material": "既製(アルミ/樹脂)",
+      "model": "リジェーロα"
+    }
+  },
+  "structure": {
+    "modules": {
+      "rafter_pitch": 455
+    },
+    "members": {
+      "土台": {
+        "section": [
+          105,
+          105
+        ]
+      },
+      "1F柱": {
+        "section": [
+          105,
+          105
+        ],
+        "at": "grid_intersections"
+      },
+      "2F梁": {
+        "section": [
+          105,
+          180
+        ]
+      },
+      "垂木": {
+        "section": [
+          45,
+          90
+        ]
+      }
+    }
+  },
+  "assets": [
+    {
+      "id": "shelf1",
+      "type": "shelf",
+      "params": {
+        "L": 1800,
+        "D": 300,
+        "H": 1800,
+        "shelves": 4,
+        "t": 24
+      },
+      "insert": [
+        910,
+        6370
+      ],
+      "z": 0,
+      "rotation": 0,
+      "level": "1F",
+      "finish": "F1"
+    },
+    {
+      "id": "sofa1",
+      "type": "block",
+      "source": "assets/お花ソファ.3dm",
+      "definition": "sofa",
+      "insert": [
+        4550,
+        4550
+      ],
+      "z": 0,
+      "rotation": 0,
+      "level": "1F"
+    }
+  ],
+  "cameras": [
+    {
+      "id": "ext_SE",
+      "type": "perspective",
+      "eye": [
+        -15000,
+        -18000,
+        9000
+      ],
+      "target": [
+        5460,
+        4550,
+        3000
+      ]
+    }
+  ],
+  "overrides_layer": "手直し",
+  "drawing": {
+    "project": {
+      "工事名称": "安曇野の家",
+      "施主": "西村俊貴",
+      "建設地": "長野県安曇野市穂高有明7364-15",
+      "緯度経度": "36.375352, 137.840721",
+      "主要用途": "一戸建ての住宅",
+      "工事種別": "新築",
+      "構造": "木造",
+      "階数": "地上1階（平屋）",
+      "階数_備考": "確認申請は平屋。将来2階の床を増設予定（個室1・個室2）",
+      "敷地面積_m2": {
+        "value": null,
+        "note": "測量図/求積図から。要確認"
+      },
+      "建築面積_m2": {
+        "value": 108,
+        "note": "外壁外周 実測概算 約11.83×9.10m。求積図で確定要"
+      },
+      "延べ面積_m2": {
+        "value": 93.5,
+        "note": "1階のみ実測概算(73.7+9.9+6.6+3.3)。将来2階床36.4は申請対象外"
+      },
+      "都市計画区域": "安曇野都市計画区域内（非線引き・区域区分なし・用途地域外/白地）",
+      "用途地域": "指定なし（白地地域）",
+      "建蔽率_法定": "60%",
+      "容積率_法定": {
+        "value": "200%",
+        "note": "白地。田園区域なら100%→要確認"
+      },
+      "建蔽率_計画": {
+        "value": null,
+        "note": "敷地面積確定後に算定"
+      },
+      "容積率_計画": {
+        "value": null,
+        "note": "敷地面積確定後に算定"
+      },
+      "防火地域": "指定なし",
+      "高さ制限": "用途地域由来の絶対高さ・斜線なし（道路/隣地斜線は基準法一般＋安曇野市景観条例配慮）",
+      "最高高さ_m": {
+        "value": 6.23,
+        "note": "GL=0仮定・屋根頂部Z6226。煙突Z6593は別。GL基準確定後精査"
+      },
+      "軒高_m": {
+        "value": null,
+        "note": "屋根Z2394〜6226。軒桁天端特定＋GL基準確定後"
+      },
+      "日影規制": "用途地域外は原則対象外（市条例指定なければ）",
+      "基礎形式": "独立基礎（アンカーボルト・凍結深度考慮／石場建てではない）",
+      "設計事務所": "cotomos",
+      "一級建築士事務所登録番号": "該当なし",
+      "一級建築士": "該当なし",
+      "図面作成日": "2026/09/26"
+    },
+    "sheets": [
+      {
+        "no": "A-00",
+        "name": "表紙",
+        "type": "静的",
+        "scale": "-",
+        "status": "下書き"
+      },
+      {
+        "no": "A-01",
+        "name": "案内図・計画概要",
+        "type": "地図+テーブル",
+        "scale": "1/2000,1/10000",
+        "status": "データ待ち(GSI)"
+      },
+      {
+        "no": "A-02",
+        "name": "仕上げ表",
+        "type": "テーブル",
+        "scale": "-",
+        "status": "下書き"
+      },
+      {
+        "no": "A-03",
+        "name": "配置図",
+        "type": "3D投影",
+        "scale": "1/100",
+        "status": "未着手"
+      },
+      {
+        "no": "A-04",
+        "name": "平面図",
+        "type": "3D投影",
+        "scale": "1/50",
+        "status": "未着手"
+      },
+      {
+        "no": "A-05",
+        "name": "断面図",
+        "type": "3D投影+クリッピング",
+        "scale": "1/50",
+        "status": "未着手"
+      },
+      {
+        "no": "A-06",
+        "name": "立面図",
+        "type": "3D投影",
+        "scale": "1/50",
+        "status": "未着手"
+      },
+      {
+        "no": "A-08",
+        "name": "建具表",
+        "type": "テーブル",
+        "scale": "1/50",
+        "status": "下書き"
+      },
+      {
+        "no": "E-01",
+        "name": "電気設備図",
+        "type": "3D投影+記号",
+        "scale": "1/50",
+        "status": "未着手"
+      },
+      {
+        "no": "E-02",
+        "name": "照明器具リスト",
+        "type": "テーブル",
+        "scale": "-",
+        "status": "未着手"
+      },
+      {
+        "no": "E-03",
+        "name": "給排水衛生設備図",
+        "type": "3D投影+記号",
+        "scale": "1/50",
+        "status": "未着手"
+      },
+      {
+        "no": "E-04",
+        "name": "換気設備図",
+        "type": "3D投影+記号",
+        "scale": "1/50",
+        "status": "未着手"
+      },
+      {
+        "no": "E-05",
+        "name": "設備機器リスト",
+        "type": "テーブル",
+        "scale": "-",
+        "status": "未着手"
+      }
+    ],
+    "sources": {
+      "model_master": "H:\\マイドライブ\\project\\安曇野の自邸建設\\02_各自作業場所\\西村俊貴\\rhino\\generated\\安曇野の家_母屋_master.3dm",
+      "model_gen": "H:\\マイドライブ\\project\\安曇野の自邸建設\\02_各自作業場所\\西村俊貴\\rhino\\archive\\260917_安曇野の家_母屋モデル生成_階段移動.3dm",
+      "drawing_file": "H:\\マイドライブ\\project\\安曇野の自邸建設\\02_各自作業場所\\西村俊貴\\rhino\\archive\\260926_安曇野の家_図面_test.3dm",
+      "spreadsheet_id": "1tTK8aIn12Qq83fktGpcMVb4cNCa2J8HKU7bkQCeSTHk"
+    }
+  },
+  "_extract_meta": {
+    "source": "H:\\マイドライブ\\project\\安曇野の自邸建設\\02_各自作業場所\\西村俊貴\\rhino\\archive\\260917_安曇野の家_母屋モデル生成_階段移動.3dm",
+    "split_x": 139542.44842495437,
+    "origin_shift": [
+      122627.44842495437,
+      -1484.1209229289725
+    ],
+    "counts": {
+      "outer": 7,
+      "inner": 15,
+      "floor": 4,
+      "window": 12,
+      "door": 1,
+      "roof": 2
+    }
+  }
+}
