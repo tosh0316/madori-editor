@@ -385,6 +385,7 @@ function drawSection(){
       ctx.fillStyle=C.moon; ctx.fillRect(sx(ua),sy(zb),sx(ub)-sx(ua),sy(za)-sy(zb)); ctx.strokeStyle=isSel(o)?C.kosumo:C.nezu; ctx.lineWidth=1; ctx.strokeRect(sx(ua),sy(zb),sx(ub)-sx(ua),sy(za)-sy(zb));
       if(o.type==='window'){ lineS(sx(ua),sy((za+zb)/2),sx(ub),sy((za+zb)/2),C.rule,1); }
       txt(o.id,sx((ua+ub)/2),sy(zb)-8,font(9,true),isSel(o)?C.kosumo:C.sub);
+      H.push({kind:'sill',o,u0:ua,u1:ub,z:za,fl}); H.push({kind:'head',o,u0:ua,u1:ub,z:zb,fl});
       H.push({kind:'open',o,u0:ua,u1:ub,z0:za,z1:zb}); } }
   // 切断される壁（濃く）＋開口の抜け
   for(const w of S.walls){ const A=P(w.a),B=P(w.b); if(Math.abs(A[cx]-B[cx])<1)continue; if((A[cx]-c)*(B[cx]-c)>0)continue;
@@ -396,6 +397,7 @@ function drawSection(){
       const fl=w.base?z0:lvOf(o.level).fl, za=fl+(+o.sill||0), zb=fl+(+o.head||0);
       ctx.fillStyle=C.moon; ctx.fillRect(sx(u-hw)-1,sy(zb),sx(u+hw)-sx(u-hw)+2,sy(za)-sy(zb));
       if(o.type==='window') lineS(sx(u),sy(zb),sx(u),sy(za),isSel(o)?C.kosumo:C.nezu,1.5);
+      H.push({kind:'sill',o,u0:u-hw,u1:u+hw,z:za,fl}); H.push({kind:'head',o,u0:u-hw,u1:u+hw,z:zb,fl});
       H.push({kind:'open',o,u0:u-hw,u1:u+hw,z0:za,z1:zb}); }
     H.push({kind:'wall',o:w,u0:u-hw,u1:u+hw,z0,z1:Math.max(zl,zr)}); }
   // 屋根
@@ -422,21 +424,24 @@ function drawSection(){
   cur.handles=H;
   const lab=(ax===0?S.gly:S.glx)[secGeom().k];
   txt(`${cur.mode==='secX'?'X断面':'Y断面'}  ${ax===0?'y':'x'} = ${Math.round(c)}${lab?'（'+lab+' 通り）':''}`,16,innerHeight-80,font(13,false,500),C.ink,'left');
-  document.getElementById('stat').textContent='FL/CL・軒・棟はドラッグで高さ変更（5mm）';
+  document.getElementById('stat').textContent='FL/CL・軒・棟・開口sill/headはドラッグで高さ変更（5mm）';
 }
 function hitHandle(px,py){ let best=null,bd=1e9;
   for(const h of cur.handles||[]){ let d=1e9;
     if(h.kind==='knot') d=Math.hypot(px-sx(h.u),py-sy(h.z))-6;
+    else if(h.kind==='sill'||h.kind==='head'){ if(px>=sx(h.u0)-3&&px<=sx(h.u1)+3) d=Math.abs(py-sy(h.z))-2; }
     else if(h.kind==='wall'||h.kind==='open'){ if(px>=sx(h.u0)-3&&px<=sx(h.u1)+3&&py<=sy(h.z0)&&py>=sy(h.z1)) d=h.kind==='open'?2:8; }
     else if(h.kind==='roof'){ for(let i=0;i<h.pts.length-1;i++) d=Math.min(d,segDistS(px,py,h.pts[i],h.pts[i+1])); d+=2; }
     else if(px>=sx(h.u0)-160&&px<=sx(h.u1)+160) d=Math.abs(py-sy(h.z))+1;
     if(d<bd){bd=d;best=h;} }
   return bd<11?best:null; }
-const DRAGGABLE=new Set(['knot','fl','cl','datum']);
-function applyDrag(h,z){ if(h.kind==='fl')h.o.fl=z; else if(h.kind==='cl')h.o.cl=z; else if(h.kind==='datum')S.datums[h.name]=z; else if(h.kind==='knot')h.k.z=z; }
+const DRAGGABLE=new Set(['knot','fl','cl','datum','sill','head']);
+function applyDrag(h,z){ if(h.kind==='fl')h.o.fl=z; else if(h.kind==='cl')h.o.cl=z; else if(h.kind==='datum')S.datums[h.name]=z; else if(h.kind==='knot')h.k.z=z;
+  else if(h.kind==='sill')h.o.sill=Math.max(0,Math.round(z-h.fl));
+  else if(h.kind==='head')h.o.head=Math.max((+h.o.sill||0)+100,Math.round(z-h.fl)); }
 function selFromHandle(h){ if(h.kind==='fl'||h.kind==='cl') return {type:'level',o:h.o};
   if(h.kind==='datum') return {type:'datum',name:h.name,o:null}; if(h.kind==='knot'||h.kind==='roof') return {type:'roof',o:h.o};
-  if(h.kind==='open') return {type:'opening',o:h.o}; return {type:'wall',o:h.o}; }
+  if(h.kind==='open'||h.kind==='sill'||h.kind==='head') return {type:'opening',o:h.o}; return {type:'wall',o:h.o}; }
 
 // ---------- 入力 ----------
 let ptrs=new Map(), moved=false, downXY=null, pinch=null, dragAxis=false;
@@ -612,7 +617,7 @@ function toolHint(){ let t='';
   if(cur.mode==='edit') t={select:'',wall_outer:'交点を2つタップして外壁を引く',wall_inner:'交点を2つタップして内壁を引く',
     opening:`同じ壁の上の交点を2つタップ → 単線。実開口は 単線 − ${dedOf('window')}（窓）を中点に振り分け`,
     fitting:`同じ壁の上の交点を2つタップ → 単線。実開口は 単線 − ${dedOf('fitting')}`,floor:'交点を順にタップ、最初の点で閉じる',room:'壁で囲まれた内側をタップ'}[cur.tool]||'';
-  else if(isSec(cur.mode)) t='◀ ▶ で切断位置を移動。線や点をタップすると左に詳細';
+  else if(isSec(cur.mode)) t='◀ ▶ で切断位置を移動。FL/CL・軒・棟・開口sill/headをドラッグ';
   toast(t); }
 function updateSecbar(){ const sb=document.getElementById('secbar'); sb.hidden=!isSec(cur.mode); if(sb.hidden)return;
   const g=secGeom(), lab=(g.ax===0?S.gly:S.glx)[g.k]; document.getElementById('sec_nm').textContent=`${g.ax===0?'y':'x'}=${Math.round(g.c)}${lab?' '+lab:''}`; }
